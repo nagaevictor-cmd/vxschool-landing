@@ -4,6 +4,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>VX School</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,8 +14,9 @@
 </head>
 
 <body>
-  <video id="bg-video" autoplay muted loop playsinline>
+  <video id="bg-video" autoplay muted loop playsinline webkit-playsinline preload="auto">
     <source src="/videos/bg.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
   </video>
 
 

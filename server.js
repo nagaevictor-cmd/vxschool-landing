@@ -105,17 +105,19 @@ app.use(express.json({ limit: '1mb' })); // Reduced limit for security
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 
-// Session middleware for admin
-app.use(session({
-  secret: ADMIN_SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: !IS_DEVELOPMENT, // HTTPS only in production
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-}));
+// Session middleware for admin (only in development)
+if (IS_DEVELOPMENT) {
+  app.use(session({
+    secret: ADMIN_SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+}
 
 // Apply analytics tracking
 app.use(trackVisit);
@@ -309,7 +311,10 @@ app.post('/admin/login', adminLoginLimiter, async (req, res) => {
         { expiresIn: '24h' }
       );
 
-      req.session.adminUser = { username: ADMIN_USERNAME };
+      // Session only in development
+      if (IS_DEVELOPMENT && req.session) {
+        req.session.adminUser = { username: ADMIN_USERNAME };
+      }
 
       console.log(`✅ Admin login successful from IP: ${req.ip}`);
 

@@ -57,6 +57,10 @@ body {
   object-fit: cover;
   z-index: -1;
   filter: brightness(0.35) saturate(1.05);
+  /* Mobile autoplay optimization */
+  -webkit-playsinline: true;
+  -moz-playsinline: true;
+  playsinline: true;
 }
 
 @media (max-width: 640px) {

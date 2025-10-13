@@ -1,6 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Add error handling for the entire script
   try {
+    // Mobile video autoplay fix
+    const video = document.getElementById('bg-video');
+    if (video) {
+      // Force video to play on mobile
+      const playVideo = () => {
+        video.play().catch(error => {
+          console.log('Video autoplay failed:', error);
+          // Fallback: try to play on user interaction
+          document.addEventListener('touchstart', () => {
+            video.play().catch(e => console.log('Video play failed:', e));
+          }, { once: true });
+          
+          document.addEventListener('click', () => {
+            video.play().catch(e => console.log('Video play failed:', e));
+          }, { once: true });
+        });
+      };
+
+      // Try to play immediately
+      playVideo();
+
+      // Also try when video metadata is loaded
+      video.addEventListener('loadedmetadata', playVideo);
+      
+      // Ensure video is muted (required for autoplay)
+      video.muted = true;
+      video.defaultMuted = true;
+    }
+
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
