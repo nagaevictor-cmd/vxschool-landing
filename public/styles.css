@@ -92,6 +92,84 @@ body {
   }
 }
 
+/* iPhone 11 Pro Max and similar tall screens */
+@media (max-width: 640px) and (min-height: 800px) {
+  .overlay {
+    /* More aggressive gradient for taller screens */
+    background: linear-gradient(to bottom, 
+      rgba(0,0,0,0.7) 0%, 
+      rgba(0,0,0,0.8) 25%, 
+      rgba(0,0,0,0.9) 45%, 
+      rgba(15, 18, 24, 0.95) 65%, 
+      rgba(15, 18, 24, 1) 80%, 
+      rgba(15, 18, 24, 1) 100%);
+  }
+  
+  .overlay::after {
+    /* Extended gradient for tall screens */
+    height: 60vh;
+    background: linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(15, 18, 24, 0.1) 10%, 
+      rgba(15, 18, 24, 0.4) 30%, 
+      rgba(15, 18, 24, 0.7) 60%, 
+      rgba(15, 18, 24, 0.95) 85%, 
+      rgba(15, 18, 24, 1) 100%);
+  }
+}
+
+/* Extra tall screens like iPhone 11 Pro Max, 12 Pro Max, etc. */
+@media (max-width: 640px) and (min-height: 900px) {
+  .overlay::after {
+    /* Even more extended gradient for very tall screens */
+    height: 70vh;
+    background: linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(15, 18, 24, 0.05) 5%, 
+      rgba(15, 18, 24, 0.2) 20%, 
+      rgba(15, 18, 24, 0.5) 40%, 
+      rgba(15, 18, 24, 0.8) 70%, 
+      rgba(15, 18, 24, 0.98) 90%, 
+      rgba(15, 18, 24, 1) 100%);
+  }
+}
+
+/* Mobile gradient fix element */
+.mobile-gradient-fix {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .mobile-gradient-fix {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40vh;
+    background: linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(15, 18, 24, 0.3) 25%, 
+      rgba(15, 18, 24, 0.7) 60%, 
+      rgba(15, 18, 24, 1) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+/* For iPhone 11 Pro Max specifically (414x896) */
+@media (max-width: 640px) and (min-height: 890px) and (max-height: 900px) {
+  .mobile-gradient-fix {
+    height: 45vh;
+    background: linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(15, 18, 24, 0.1) 10%, 
+      rgba(15, 18, 24, 0.4) 30%, 
+      rgba(15, 18, 24, 0.8) 70%, 
+      rgba(15, 18, 24, 1) 100%);
+  }
+}
+
 .overlay {
   position: relative;
   display: flex;
