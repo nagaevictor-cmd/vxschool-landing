@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VX School - Админ панель</title>
+    <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <div class="login-form">
+            <h1>🎵 VX School Admin</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Логин:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">Войти</button>
+            </form>
+            <div id="loginError" class="error-message"></div>
+        </div>
+    </div>
+
+    <div class="admin-panel" id="adminPanel" style="display: none;">
+        <header class="admin-header">
+            <h1>🎵 VX School - Админ панель</h1>
+            <div class="header-actions">
+                <span id="adminUser"></span>
+                <button id="logoutBtn" class="logout-btn">Выйти</button>
+            </div>
+        </header>
+
+        <nav class="admin-nav">
+            <button class="nav-btn active" data-section="dashboard">📊 Дашборд</button>
+            <button class="nav-btn" data-section="contacts">📧 Заявки</button>
+            <button class="nav-btn" data-section="settings">⚙️ Настройки</button>
+            <button class="nav-btn" data-section="analytics">📈 Аналитика</button>
+        </nav>
+
+        <main class="admin-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Всего заявок</h3>
+                        <div class="stat-number" id="totalContacts">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>За сегодня</h3>
+                        <div class="stat-number" id="todayContacts">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>За неделю</h3>
+                        <div class="stat-number" id="weekContacts">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Посещений сегодня</h3>
+                        <div class="stat-number" id="todayVisits">0</div>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <h3>Быстрые действия</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="toggleDiscount()">
+                            <span id="discountStatus">Включить скидку</span>
+                        </button>
+                        <button class="action-btn" onclick="togglePackage('basic')">
+                            <span id="basicStatus">Отключить Базовый</span>
+                        </button>
+                        <button class="action-btn" onclick="togglePackage('group')">
+                            <span id="groupStatus">Отключить Групповой</span>
+                        </button>
+                        <button class="action-btn" onclick="togglePackage('individual')">
+                            <span id="individualStatus">Отключить Индивидуальный</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contacts Section -->
+            <section id="contacts" class="content-section">
+                <div class="section-header">
+                    <h2>Заявки от клиентов</h2>
+                    <button onclick="refreshContacts()" class="refresh-btn">🔄 Обновить</button>
+                </div>
+                <div class="contacts-table-container">
+                    <table class="contacts-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Имя</th>
+                                <th>Telegram</th>
+                                <th>Тариф</th>
+                                <th>Сообщение</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contactsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <h2>Настройки сайта</h2>
+                
+                <div class="settings-group">
+                    <h3>Скидки и акции</h3>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="discountEnabled"> 
+                            Включить скидку на курсы
+                        </label>
+                        <div class="setting-details">
+                            <input type="number" id="discountPercent" placeholder="Размер скидки %" min="1" max="90">
+                            <input type="text" id="discountText" placeholder="Текст акции">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Доступность тарифов</h3>
+                    <div class="setting-item">
+                        <label><input type="checkbox" id="basicAvailable" checked> Базовый тариф</label>
+                    </div>
+                    <div class="setting-item">
+                        <label><input type="checkbox" id="groupAvailable" checked> Групповой тариф</label>
+                    </div>
+                    <div class="setting-item">
+                        <label><input type="checkbox" id="individualAvailable" checked> Индивидуальный тариф</label>
+                    </div>
+                    <div class="setting-item">
+                        <label><input type="checkbox" id="consultationAvailable" checked> Консультация</label>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Цены на тарифы</h3>
+                    <div class="setting-item">
+                        <label>Базовый тариф (руб.):</label>
+                        <input type="number" id="basicPrice" placeholder="10000" min="0">
+                    </div>
+                    <div class="setting-item">
+                        <label>Групповой тариф (руб.):</label>
+                        <input type="number" id="groupPrice" placeholder="30000" min="0">
+                    </div>
+                    <div class="setting-item">
+                        <label>Индивидуальный тариф:</label>
+                        <input type="text" id="individualPrice" placeholder="По запросу">
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Контактная информация</h3>
+                    <div class="setting-item">
+                        <label>Telegram для связи:</label>
+                        <input type="text" id="contactTelegram" placeholder="@username">
+                    </div>
+                    <div class="setting-item">
+                        <label>Email для связи:</label>
+                        <input type="email" id="contactEmail" placeholder="contact@vxschool.com">
+                    </div>
+                </div>
+
+                <button onclick="saveSettings()" class="save-btn">💾 Сохранить настройки</button>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="content-section">
+                <h2>Аналитика посещений</h2>
+                
+                <div class="analytics-filters">
+                    <select id="analyticsRange">
+                        <option value="today">Сегодня</option>
+                        <option value="week">Неделя</option>
+                        <option value="month">Месяц</option>
+                    </select>
+                    <button onclick="loadAnalytics()">Обновить</button>
+                </div>
+
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Посещения по дням</h3>
+                        <div id="visitsChart" class="chart-container">
+                            <div class="chart-placeholder">Загрузка данных...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3>Источники трафика</h3>
+                        <div id="trafficSources" class="stats-list">
+                            <div class="stat-item">
+                                <span>Прямые переходы</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/admin/admin.js"></script>
+</body>
+</html>
