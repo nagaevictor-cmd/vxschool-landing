@@ -44,6 +44,9 @@ class SettingsIntegration {
         console.log('3. Applying package availability...');
         this.applyPackageAvailability();
         
+        console.log('4. Updating sticky price...');
+        this.updateStickyPrice();
+        
         console.log('=== SETTINGS APPLIED ===');
     }
 
@@ -505,6 +508,73 @@ class SettingsIntegration {
         this.applySettings();
     }
 
+    // Update sticky CTA button price
+    updateStickyPrice() {
+        const stickyPriceElement = document.getElementById('sticky-price');
+        if (!stickyPriceElement) return;
+
+        // Get minimum price from available packages
+        let minPrice = null;
+        let minPriceText = '';
+
+        // If settings are loaded, use them
+        if (this.settings && Object.keys(this.settings).length > 0) {
+            // Check basic price
+            if (this.settings.basicAvailable !== false && this.settings.basicPrice) {
+                const basicPrice = parseInt(this.settings.basicPrice);
+                if (minPrice === null || basicPrice < minPrice) {
+                    minPrice = basicPrice;
+                    minPriceText = `от ${basicPrice.toLocaleString('ru-RU')} ₽`;
+                }
+            }
+
+            // Check group price
+            if (this.settings.groupAvailable !== false && this.settings.groupPrice) {
+                const groupPrice = parseInt(this.settings.groupPrice);
+                if (minPrice === null || groupPrice < minPrice) {
+                    minPrice = groupPrice;
+                    minPriceText = `от ${groupPrice.toLocaleString('ru-RU')} ₽`;
+                }
+            }
+
+            // If individual is available and others aren't, show "По запросу"
+            if (this.settings.individualAvailable !== false && minPrice === null) {
+                minPriceText = 'По запросу';
+            }
+
+            // Apply discount if enabled
+            if (this.settings.discountEnabled && this.settings.discountPercent && minPrice) {
+                const discountedPrice = Math.round(minPrice * (1 - this.settings.discountPercent / 100));
+                minPriceText = `от ${discountedPrice.toLocaleString('ru-RU')} ₽`;
+            }
+        } else {
+            // Fallback: get prices from DOM elements
+            const priceElements = document.querySelectorAll('.price-amount');
+            const prices = [];
+            
+            priceElements.forEach(element => {
+                const priceText = element.textContent.replace(/\D/g, '');
+                const price = parseInt(priceText);
+                if (price && !isNaN(price)) {
+                    prices.push(price);
+                }
+            });
+
+            if (prices.length > 0) {
+                minPrice = Math.min(...prices);
+                minPriceText = `от ${minPrice.toLocaleString('ru-RU')} ₽`;
+            } else {
+                minPriceText = 'от 10 000 ₽'; // Default fallback
+            }
+        }
+
+        // Update the sticky price
+        if (minPriceText) {
+            stickyPriceElement.textContent = minPriceText;
+            console.log('Updated sticky price to:', minPriceText);
+        }
+    }
+
     // Method to force reload and reapply all settings
     async forceRefresh() {
         console.log('🔄 FORCE REFRESH STARTED');
@@ -557,6 +627,13 @@ window.testPriceUpdate = function() {
 // Initialize settings integration when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.settingsIntegration = new SettingsIntegration();
+    
+    // Also update sticky price with default values if settings aren't loaded yet
+    setTimeout(() => {
+        if (window.settingsIntegration) {
+            window.settingsIntegration.updateStickyPrice();
+        }
+    }, 1000);
 
     // Add refresh button for testing (remove in production)
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
