@@ -208,10 +208,16 @@ class AdminPanel {
     }
 
     renderContactsTable(contacts) {
+        this.allContacts = contacts; // Store all contacts for filtering
+        this.filteredContacts = contacts; // Store filtered contacts
+        this.updateContactsTable();
+    }
+
+    updateContactsTable() {
         const tbody = document.getElementById('contactsTableBody');
         tbody.innerHTML = '';
 
-        contacts.forEach(contact => {
+        this.filteredContacts.forEach(contact => {
             const row = document.createElement('tr');
             const date = new Date(contact.createdAt).toLocaleString('ru-RU');
             
@@ -222,9 +228,126 @@ class AdminPanel {
                 <td>${contact.tariff || '-'}</td>
                 <td>${contact.message ? this.escapeHtml(contact.message.substring(0, 50)) + '...' : '-'}</td>
                 <td>${contact.ip || '-'}</td>
+                <td>
+                    <div class="contact-actions">
+                        <button class="action-btn-small reply-btn" onclick="replyToContact('${contact.telegram}')">Ответить</button>
+                        <button class="action-btn-small delete-btn" onclick="deleteContact('${contact.id}')">Удалить</button>
+                    </div>
+                </td>
             `;
             tbody.appendChild(row);
         });
+
+        // Update counter
+        const countElement = document.getElementById('contactsCount');
+        if (countElement) {
+            countElement.textContent = `Показано: ${this.filteredContacts.length} из ${this.allContacts.length}`;
+        }
+    }
+
+    filterContacts() {
+        if (!this.allContacts) return;
+
+        const dateFilter = document.getElementById('dateFilter').value;
+        const tariffFilter = document.getElementById('tariffFilter').value;
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+        this.filteredContacts = this.allContacts.filter(contact => {
+            // Date filter
+            if (dateFilter !== 'all') {
+                const contactDate = new Date(contact.createdAt);
+                const now = new Date();
+                
+                switch (dateFilter) {
+                    case 'today':
+                        if (contactDate.toDateString() !== now.toDateString()) return false;
+                        break;
+                    case 'week':
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        if (contactDate < weekAgo) return false;
+                        break;
+                    case 'month':
+                        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                        if (contactDate < monthAgo) return false;
+                        break;
+                }
+            }
+
+            // Tariff filter
+            if (tariffFilter !== 'all' && contact.tariff !== tariffFilter) {
+                return false;
+            }
+
+            // Search filter
+            if (searchFilter) {
+                const searchText = `${contact.name} ${contact.telegram}`.toLowerCase();
+                if (!searchText.includes(searchFilter)) return false;
+            }
+
+            return true;
+        });
+
+        this.updateContactsTable();
+    }
+
+    sortContacts(field) {
+        if (!this.filteredContacts) return;
+
+        this.filteredContacts.sort((a, b) => {
+            let aVal, bVal;
+            
+            switch (field) {
+                case 'date':
+                    aVal = new Date(a.createdAt);
+                    bVal = new Date(b.createdAt);
+                    break;
+                case 'name':
+                    aVal = a.name.toLowerCase();
+                    bVal = b.name.toLowerCase();
+                    break;
+                case 'telegram':
+                    aVal = a.telegram.toLowerCase();
+                    bVal = b.telegram.toLowerCase();
+                    break;
+                case 'tariff':
+                    aVal = a.tariff || '';
+                    bVal = b.tariff || '';
+                    break;
+                default:
+                    return 0;
+            }
+
+            if (aVal < bVal) return -1;
+            if (aVal > bVal) return 1;
+            return 0;
+        });
+
+        this.updateContactsTable();
+    }
+
+    async clearAllContacts() {
+        if (!confirm('Вы уверены, что хотите удалить ВСЕ заявки? Это действие нельзя отменить!')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/contacts/clear', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+
+            if (response.ok) {
+                this.showSuccessMessage('Все заявки удалены');
+                this.loadContacts();
+            } else {
+                this.showErrorMessage('Ошибка при удалении заявок');
+            }
+        } catch (error) {
+            console.error('Failed to clear contacts:', error);
+            this.showErrorMessage('Ошибка соединения с сервером');
+        }
     }
 
     async loadSettings() {
@@ -536,6 +659,30 @@ function toggleDiscount() {
 
 function togglePackage(packageName) {
     window.adminPanel.togglePackage(packageName);
+}
+
+function filterContacts() {
+    window.adminPanel.filterContacts();
+}
+
+function sortContacts(field) {
+    window.adminPanel.sortContacts(field);
+}
+
+function clearAllContacts() {
+    window.adminPanel.clearAllContacts();
+}
+
+function replyToContact(telegram) {
+    const telegramUrl = `https://t.me/${telegram.replace('@', '')}`;
+    window.open(telegramUrl, '_blank');
+}
+
+function deleteContact(contactId) {
+    if (confirm('Удалить эту заявку?')) {
+        // TODO: Implement individual contact deletion
+        window.adminPanel.showErrorMessage('Функция в разработке');
+    }
 }
 
 // Initialize admin panel

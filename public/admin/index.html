@@ -86,18 +86,55 @@
             <section id="contacts" class="content-section">
                 <div class="section-header">
                     <h2>Заявки от клиентов</h2>
-                    <button onclick="refreshContacts()" class="refresh-btn">🔄 Обновить</button>
+                    <div class="contacts-actions">
+                        <button onclick="refreshContacts()" class="refresh-btn">🔄 Обновить</button>
+                        <button onclick="clearAllContacts()" class="danger-btn">🗑️ Очистить все</button>
+                    </div>
                 </div>
+                
+                <div class="contacts-filters">
+                    <div class="filter-group">
+                        <label for="dateFilter">Период:</label>
+                        <select id="dateFilter" onchange="filterContacts()">
+                            <option value="all">Все время</option>
+                            <option value="today">Сегодня</option>
+                            <option value="week">Неделя</option>
+                            <option value="month">Месяц</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="tariffFilter">Тариф:</label>
+                        <select id="tariffFilter" onchange="filterContacts()">
+                            <option value="all">Все тарифы</option>
+                            <option value="Базовый">Базовый</option>
+                            <option value="Групповой">Групповой</option>
+                            <option value="Индивидуальный">Индивидуальный</option>
+                            <option value="Консультация">Консультация</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="searchFilter">Поиск:</label>
+                        <input type="text" id="searchFilter" placeholder="Имя или Telegram..." oninput="filterContacts()">
+                    </div>
+                    
+                    <div class="filter-stats">
+                        <span id="contactsCount">Показано: 0 из 0</span>
+                    </div>
+                </div>
+                
                 <div class="contacts-table-container">
                     <table class="contacts-table">
                         <thead>
                             <tr>
-                                <th>Дата</th>
-                                <th>Имя</th>
-                                <th>Telegram</th>
-                                <th>Тариф</th>
+                                <th onclick="sortContacts('date')" class="sortable">Дата ↕</th>
+                                <th onclick="sortContacts('name')" class="sortable">Имя ↕</th>
+                                <th onclick="sortContacts('telegram')" class="sortable">Telegram ↕</th>
+                                <th onclick="sortContacts('tariff')" class="sortable">Тариф ↕</th>
                                 <th>Сообщение</th>
                                 <th>IP</th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody id="contactsTableBody">

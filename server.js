@@ -433,6 +433,25 @@ app.get('/admin/contacts', authenticateAdmin, (req, res) => {
   }
 });
 
+// Clear all contacts
+app.delete('/admin/contacts/clear', authenticateAdmin, (req, res) => {
+  try {
+    // Create backup before clearing
+    const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
+    const backupFile = path.join(dataDir, `contacts_backup_${Date.now()}.json`);
+    fs.writeFileSync(backupFile, JSON.stringify(contacts, null, 2), 'utf8');
+    
+    // Clear contacts
+    fs.writeFileSync(contactsFile, '[]', 'utf8');
+    
+    console.log(`✅ Admin cleared all contacts. Backup saved to: ${backupFile}`);
+    res.json({ ok: true, message: 'Все заявки удалены', backup: backupFile });
+  } catch (error) {
+    console.error('Clear contacts error:', error);
+    res.status(500).json({ ok: false, error: 'Ошибка при удалении заявок' });
+  }
+});
+
 // Admin settings
 app.get('/admin/settings', authenticateAdmin, (req, res) => {
   try {
@@ -642,19 +661,55 @@ app.post('/contact', async (req, res) => {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 
-      const telegramMessage = `🎵 Новая заявка VX School
+      const telegramMessage = `🎵 <b>Новая заявка VX School</b>
 
-👤 Имя: ${escapeHtml(sanitizedName)}
-📱 Telegram: ${escapeHtml(sanitizedTelegram)}
-${sanitizedTariff ? `📋 Тариф: ${escapeHtml(sanitizedTariff)}` : ''}
-${sanitizedMessage ? `\n💬 Сообщение:\n${escapeHtml(sanitizedMessage)}` : ''}
+👤 <b>Имя:</b> ${escapeHtml(sanitizedName)}
+📱 <b>Telegram:</b> ${escapeHtml(sanitizedTelegram)}
+${sanitizedTariff ? `📋 <b>Тариф:</b> ${escapeHtml(sanitizedTariff)}` : ''}
+${sanitizedMessage ? `\n💬 <b>Сообщение:</b>\n<i>${escapeHtml(sanitizedMessage)}</i>` : ''}
 
-⏰ ${new Date().toLocaleString('ru-RU')}`;
+🌐 <b>IP:</b> <code>${clientIP}</code>
+⏰ <b>Время:</b> ${new Date().toLocaleString('ru-RU')}
+
+<b>ID заявки:</b> <code>${entry.id}</code>`;
+
+      // Create inline keyboard with quick actions
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '💬 Написать в Telegram',
+              url: `https://t.me/${sanitizedTelegram.replace('@', '')}`
+            }
+          ],
+          [
+            {
+              text: '📊 Админ панель',
+              url: `https://${req.get('host')}/admin/`
+            },
+            {
+              text: '📋 Все заявки',
+              callback_data: `view_contacts`
+            }
+          ],
+          [
+            {
+              text: '✅ Обработано',
+              callback_data: `mark_processed_${entry.id}`
+            },
+            {
+              text: '❌ Спам',
+              callback_data: `mark_spam_${entry.id}`
+            }
+          ]
+        ]
+      };
 
       await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         chat_id: TELEGRAM_CHAT_ID,
         text: telegramMessage,
-        parse_mode: 'HTML'
+        parse_mode: 'HTML',
+        reply_markup: keyboard
       });
 
     } catch (telegramErr) {
@@ -664,6 +719,107 @@ ${sanitizedMessage ? `\n💬 Сообщение:\n${escapeHtml(sanitizedMessage)
   }
 
   return res.json({ ok: true });
+});
+
+// Telegram webhook for bot callbacks
+app.post('/webhook/telegram', async (req, res) => {
+  const update = req.body;
+  
+  if (update.callback_query) {
+    const callbackData = update.callback_query.data;
+    const chatId = update.callback_query.message.chat.id;
+    const messageId = update.callback_query.message.message_id;
+    
+    try {
+      if (callbackData === 'view_contacts') {
+        // Send contacts summary
+        const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
+        const today = new Date().toDateString();
+        const todayContacts = contacts.filter(c => new Date(c.createdAt).toDateString() === today);
+        const weekContacts = contacts.filter(c => {
+          const contactDate = new Date(c.createdAt);
+          const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          return contactDate >= weekAgo;
+        });
+        
+        const summary = `📊 <b>Статистика заявок</b>
+
+📅 <b>Сегодня:</b> ${todayContacts.length}
+📈 <b>За неделю:</b> ${weekContacts.length}
+📋 <b>Всего:</b> ${contacts.length}
+
+<b>Последние 5 заявок:</b>
+${contacts.slice(0, 5).map(contact => 
+  `• ${contact.name} (@${contact.telegram.replace('@', '')}) - ${contact.tariff || 'Без тарифа'}`
+).join('\n')}`;
+
+        const keyboard = {
+          inline_keyboard: [
+            [
+              {
+                text: '🔗 Открыть админ панель',
+                url: `https://${req.get('host')}/admin/`
+              }
+            ]
+          ]
+        };
+
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageText`, {
+          chat_id: chatId,
+          message_id: messageId,
+          text: summary,
+          parse_mode: 'HTML',
+          reply_markup: keyboard
+        });
+        
+      } else if (callbackData.startsWith('mark_processed_')) {
+        // Mark as processed
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageReplyMarkup`, {
+          chat_id: chatId,
+          message_id: messageId,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '✅ Заявка обработана',
+                  callback_data: 'processed'
+                }
+              ]
+            ]
+          }
+        });
+        
+      } else if (callbackData.startsWith('mark_spam_')) {
+        // Mark as spam
+        const contactId = callbackData.replace('mark_spam_', '');
+        
+        // Remove from contacts
+        const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
+        const filteredContacts = contacts.filter(c => c.id !== contactId);
+        fs.writeFileSync(contactsFile, JSON.stringify(filteredContacts, null, 2), 'utf8');
+        
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageReplyMarkup`, {
+          chat_id: chatId,
+          message_id: messageId,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '🗑️ Помечено как спам',
+                  callback_data: 'spam'
+                }
+              ]
+            ]
+          }
+        });
+      }
+      
+    } catch (error) {
+      console.error('Telegram webhook error:', error);
+    }
+  }
+  
+  res.status(200).json({ ok: true });
 });
 
 // Global error handler
