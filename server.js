@@ -453,6 +453,30 @@ app.delete('/admin/contacts/clear', authenticateAdmin, (req, res) => {
   }
 });
 
+// Delete single contact
+app.delete('/admin/contacts/:id', authenticateAdmin, (req, res) => {
+  try {
+    const contactId = req.params.id;
+    const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
+    
+    // Find contact index
+    const contactIndex = contacts.findIndex(c => c.id === contactId);
+    if (contactIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Заявка не найдена' });
+    }
+    
+    // Remove contact
+    const deletedContact = contacts.splice(contactIndex, 1)[0];
+    fs.writeFileSync(contactsFile, JSON.stringify(contacts, null, 2), 'utf8');
+    
+    console.log(`✅ Admin deleted contact: ${deletedContact.name} (${deletedContact.telegram})`);
+    res.json({ ok: true, message: 'Заявка удалена', deletedContact });
+  } catch (error) {
+    console.error('Delete contact error:', error);
+    res.status(500).json({ ok: false, error: 'Ошибка при удалении заявки' });
+  }
+});
+
 // Admin settings
 app.get('/admin/settings', authenticateAdmin, (req, res) => {
   try {

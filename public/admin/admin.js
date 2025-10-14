@@ -738,6 +738,27 @@ class AdminPanel {
         }
     }
 
+    async deleteContact(contactId) {
+        try {
+            const response = await fetch(`/admin/contacts/${contactId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+
+            if (response.ok) {
+                this.showSuccessMessage('Заявка удалена');
+                this.loadContacts(); // Reload contacts to update the table
+            } else {
+                this.showErrorMessage('Ошибка при удалении заявки');
+            }
+        } catch (error) {
+            console.error('Failed to delete contact:', error);
+            this.showErrorMessage('Ошибка соединения с сервером');
+        }
+    }
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -785,8 +806,7 @@ function replyToContact(telegram) {
 
 function deleteContact(contactId) {
     if (confirm('Удалить эту заявку?')) {
-        // TODO: Implement individual contact deletion
-        window.adminPanel.showErrorMessage('Функция в разработке');
+        window.adminPanel.deleteContact(contactId);
     }
 }
 
