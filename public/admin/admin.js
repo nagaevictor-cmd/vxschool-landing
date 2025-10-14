@@ -331,27 +331,48 @@ class AdminPanel {
     renderAnalytics(analytics) {
         // Simple chart rendering (you can integrate Chart.js later)
         const chartContainer = document.getElementById('visitsChart');
-        chartContainer.innerHTML = `
-            <div class="simple-chart">
-                ${analytics.visits.map(day => `
-                    <div class="chart-bar" style="height: ${(day.count / Math.max(...analytics.visits.map(d => d.count))) * 100}%">
-                        <span class="bar-label">${day.date}</span>
-                        <span class="bar-value">${day.count}</span>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-
-
+        
+        if (analytics.visits.length === 0) {
+            chartContainer.innerHTML = '<div class="no-data">Нет данных о посещениях</div>';
+        } else {
+            const maxVisits = Math.max(...analytics.visits.map(d => d.count));
+            chartContainer.innerHTML = `
+                <div class="simple-chart">
+                    ${analytics.visits.map(day => {
+                        const date = new Date(day.date);
+                        const shortDate = `${date.getDate()}.${date.getMonth() + 1}`;
+                        return `
+                            <div class="chart-bar" style="height: ${maxVisits > 0 ? (day.count / maxVisits) * 100 : 10}%">
+                                <span class="bar-label">${shortDate}</span>
+                                <span class="bar-value">${day.count}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div class="chart-info">
+                    <small>Показаны уникальные посетители за выбранный период</small>
+                </div>
+            `;
+        }
 
         // Update traffic sources
         const trafficSources = document.getElementById('trafficSources');
-        trafficSources.innerHTML = analytics.sources.map(source => `
-            <div class="stat-item">
-                <span>${source.name}</span>
-                <span class="stat-value">${source.count}</span>
-            </div>
-        `).join('');
+        if (analytics.sources.length === 0) {
+            trafficSources.innerHTML = '<div class="no-data">Нет данных об источниках трафика</div>';
+        } else {
+            const totalSources = analytics.sources.reduce((sum, source) => sum + source.count, 0);
+            trafficSources.innerHTML = analytics.sources
+                .sort((a, b) => b.count - a.count) // Sort by count descending
+                .map(source => {
+                    const percentage = totalSources > 0 ? Math.round((source.count / totalSources) * 100) : 0;
+                    return `
+                        <div class="stat-item">
+                            <span>${source.name}</span>
+                            <span class="stat-value">${source.count} (${percentage}%)</span>
+                        </div>
+                    `;
+                }).join('');
+        }
     }
 
     async toggleDiscount() {
@@ -531,6 +552,7 @@ const chartStyles = `
     justify-content: space-around;
     height: 150px;
     padding: 20px 0;
+    gap: 4px;
 }
 
 .chart-bar {
@@ -543,13 +565,20 @@ const chartStyles = `
     flex-direction: column;
     justify-content: end;
     align-items: center;
+    transition: all 0.3s ease;
+}
+
+.chart-bar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 .bar-label {
     position: absolute;
     bottom: -25px;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     opacity: 0.7;
+    white-space: nowrap;
 }
 
 .bar-value {
@@ -557,6 +586,37 @@ const chartStyles = `
     top: -25px;
     font-size: 0.8rem;
     font-weight: 600;
+    color: #333;
+}
+
+.chart-info {
+    text-align: center;
+    margin-top: 10px;
+    color: #666;
+}
+
+.no-data {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 40px 20px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: #ff6b35;
 }
 </style>
 `;

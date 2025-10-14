@@ -174,7 +174,8 @@ if (!fs.existsSync(settingsFile)) {
 if (!fs.existsSync(analyticsFile)) {
   const defaultAnalytics = {
     visits: [],
-    sources: []
+    sources: [],
+    uniqueVisitors: {}
   };
   fs.writeFileSync(analyticsFile, JSON.stringify(defaultAnalytics, null, 2), 'utf8');
 }
@@ -199,17 +200,67 @@ function authenticateAdmin(req, res, next) {
 
 // Analytics tracking middleware
 function trackVisit(req, res, next) {
-  if (!req.path.startsWith('/admin') && !req.path.startsWith('/api')) {
+  // Only track page visits, not static resources or API calls
+  const isPageVisit = !req.path.startsWith('/admin') && 
+                     !req.path.startsWith('/api') && 
+                     !req.path.includes('.') && // Skip files with extensions
+                     req.method === 'GET' &&
+                     req.path === '/'; // Only track main page visits
+
+  // Skip bots and crawlers
+  const userAgent = req.get('User-Agent') || '';
+  const isBot = /bot|crawler|spider|crawling/i.test(userAgent);
+
+  if (isPageVisit && !isBot) {
     try {
       const analyticsData = JSON.parse(fs.readFileSync(analyticsFile, 'utf8'));
       const today = new Date().toISOString().split('T')[0];
+      const clientIP = req.ip || req.socket.remoteAddress;
 
-      // Track daily visits
-      const todayVisit = analyticsData.visits.find(v => v.date === today);
-      if (todayVisit) {
-        todayVisit.count++;
-      } else {
-        analyticsData.visits.push({ date: today, count: 1 });
+      // Initialize unique visitors tracking if not exists
+      if (!analyticsData.uniqueVisitors) {
+        analyticsData.uniqueVisitors = {};
+      }
+
+      // Track unique visitors per day
+      if (!analyticsData.uniqueVisitors[today]) {
+        analyticsData.uniqueVisitors[today] = new Set();
+      }
+
+      const todayVisitors = new Set(analyticsData.uniqueVisitors[today]);
+      const isUniqueVisitor = !todayVisitors.has(clientIP);
+
+      if (isUniqueVisitor) {
+        todayVisitors.add(clientIP);
+        analyticsData.uniqueVisitors[today] = Array.from(todayVisitors);
+
+        // Track daily visits (only unique visitors)
+        const todayVisit = analyticsData.visits.find(v => v.date === today);
+        if (todayVisit) {
+          todayVisit.count++;
+        } else {
+          analyticsData.visits.push({ date: today, count: 1 });
+        }
+
+        // Track traffic sources (only for unique visitors)
+        const referer = req.get('Referer');
+        let source = 'Прямые переходы';
+        if (referer && !referer.includes(req.get('Host'))) {
+          if (referer.includes('google')) source = 'Google';
+          else if (referer.includes('yandex')) source = 'Yandex';
+          else if (referer.includes('vk.com')) source = 'VKontakte';
+          else if (referer.includes('t.me')) source = 'Telegram';
+          else if (referer.includes('instagram')) source = 'Instagram';
+          else if (referer.includes('facebook')) source = 'Facebook';
+          else source = 'Другие сайты';
+        }
+
+        const sourceEntry = analyticsData.sources.find(s => s.name === source);
+        if (sourceEntry) {
+          sourceEntry.count++;
+        } else {
+          analyticsData.sources.push({ name: source, count: 1 });
+        }
       }
 
       // Keep only last 30 days
@@ -217,23 +268,13 @@ function trackVisit(req, res, next) {
         .filter(v => new Date(v.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      // Track traffic sources (simplified)
-      const referer = req.get('Referer');
-      let source = 'Прямые переходы';
-      if (referer) {
-        if (referer.includes('google')) source = 'Google';
-        else if (referer.includes('yandex')) source = 'Yandex';
-        else if (referer.includes('vk.com')) source = 'VKontakte';
-        else if (referer.includes('t.me')) source = 'Telegram';
-        else source = 'Другие сайты';
-      }
-
-      const sourceEntry = analyticsData.sources.find(s => s.name === source);
-      if (sourceEntry) {
-        sourceEntry.count++;
-      } else {
-        analyticsData.sources.push({ name: source, count: 1 });
-      }
+      // Clean up old unique visitors data
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      Object.keys(analyticsData.uniqueVisitors).forEach(date => {
+        if (date < thirtyDaysAgo) {
+          delete analyticsData.uniqueVisitors[date];
+        }
+      });
 
       fs.writeFileSync(analyticsFile, JSON.stringify(analyticsData, null, 2), 'utf8');
     } catch (error) {
