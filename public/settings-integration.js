@@ -14,11 +14,9 @@ class SettingsIntegration {
 
     async loadSettings() {
         try {
-            console.log('Loading settings from /api/settings...');
             const response = await fetch('/api/settings');
             if (response.ok) {
                 this.settings = await response.json();
-                console.log('Loaded settings:', this.settings);
             } else {
                 console.error('Failed to load settings, response:', response.status);
             }
@@ -28,53 +26,26 @@ class SettingsIntegration {
     }
 
     applySettings() {
-        console.log('=== APPLYING ALL SETTINGS ===');
-        console.log('Settings object:', this.settings);
-        
         // First reset everything to clean state
-        console.log('0. Resetting to clean state...');
         this.resetToCleanState();
-        
-        console.log('1. Applying price settings...');
         this.applyPriceSettings();
-        
-        console.log('2. Applying discount settings...');
         this.applyDiscountSettings();
-        
-        console.log('3. Applying package availability...');
         this.applyPackageAvailability();
-        
-        console.log('4. Updating sticky price...');
         this.updateStickyPrice();
-        
-        console.log('=== SETTINGS APPLIED ===');
     }
 
     applyPriceSettings() {
-        console.log('🔧 Price settings already applied in resetToCleanState');
-        // Prices are now set in resetToCleanState(), so this function just confirms
-        console.log('Current prices:');
-        console.log('- Basic:', this.settings.basicPrice);
-        console.log('- Group:', this.settings.groupPrice);
-        console.log('- Individual:', this.settings.individualPrice);
+        // Prices are set in resetToCleanState()
     }
 
     applyDiscountSettings() {
-        console.log('🎯 Applying discount settings...');
-        console.log('Discount enabled:', this.settings.discountEnabled);
-        
         if (this.settings.discountEnabled && this.settings.discountText) {
-            console.log('Showing discount banner and updating prices...');
             this.showDiscountBanner();
             this.updatePricesWithDiscount();
-        } else {
-            console.log('Discount disabled, skipping...');
         }
     }
 
     resetToCleanState() {
-        console.log('🧹 Resetting to clean state...');
-        
         // Remove discount banner
         const existingBanner = document.querySelector('.discount-banner');
         if (existingBanner) {
@@ -111,8 +82,6 @@ class SettingsIntegration {
                 }
             }
         });
-        
-        console.log('✅ Clean state restored');
     }
 
     resetPricesToOriginal() {
@@ -571,58 +540,27 @@ class SettingsIntegration {
         // Update the sticky price
         if (minPriceText) {
             stickyPriceElement.textContent = minPriceText;
-            console.log('Updated sticky price to:', minPriceText);
         }
     }
 
     // Method to force reload and reapply all settings
     async forceRefresh() {
-        console.log('🔄 FORCE REFRESH STARTED');
-        
         // Clear all existing modifications
-        console.log('Resetting prices to original...');
         this.resetPricesToOriginal();
 
         // Remove discount banner
         const existingBanner = document.querySelector('.discount-banner');
         if (existingBanner) {
-            console.log('Removing existing banner...');
             existingBanner.remove();
         }
 
         // Reload settings and reapply
-        console.log('Loading settings...');
         await this.loadSettings();
-        
-        console.log('Applying settings...');
         this.applySettings();
-
-        console.log('🔄 FORCE REFRESH COMPLETED');
-        console.log('Final settings:', this.settings);
     }
 }
 
-// Test function for debugging
-window.testPriceUpdate = function() {
-    console.log('🧪 TESTING PRICE UPDATE');
-    const basicElement = document.querySelector('[data-package="basic"] .price');
-    const groupElement = document.querySelector('[data-package="group"] .price');
-    
-    console.log('Basic element:', basicElement);
-    console.log('Group element:', groupElement);
-    
-    if (basicElement) {
-        console.log('Basic element HTML:', basicElement.innerHTML);
-        basicElement.innerHTML = '<span class="price-amount">1500</span> руб.';
-        console.log('Basic element HTML after:', basicElement.innerHTML);
-    }
-    
-    if (groupElement) {
-        console.log('Group element HTML:', groupElement.innerHTML);
-        groupElement.innerHTML = '<span class="price-amount">50000</span> руб.';
-        console.log('Group element HTML after:', groupElement.innerHTML);
-    }
-};
+
 
 // Initialize settings integration when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -635,30 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 
-    // Add refresh button for testing (remove in production)
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        const refreshBtn = document.createElement('button');
-        refreshBtn.textContent = '🔄 Обновить настройки';
-        refreshBtn.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #ff6b35;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            z-index: 9999;
-            font-size: 12px;
-        `;
-        refreshBtn.onclick = () => {
-            console.log('🔴 BUTTON CLICKED');
-            console.log('Settings integration object:', window.settingsIntegration);
-            window.settingsIntegration.forceRefresh();
-        };
-        document.body.appendChild(refreshBtn);
-    }
+
 });
 
 // Export for use in other scripts
