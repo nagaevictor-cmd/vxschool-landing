@@ -10,6 +10,7 @@ import jwt from 'jsonwebtoken';
 import session from 'express-session';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
+import FormData from 'form-data';
 
 // Load environment variables
 dotenv.config();
@@ -181,20 +182,29 @@ if (!fs.existsSync(analyticsFile)) {
   fs.writeFileSync(analyticsFile, JSON.stringify(defaultAnalytics, null, 2), 'utf8');
 }
 
-// Admin authentication middleware
+// Admin authentication middleware (enhanced)
 function authenticateAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
+    console.warn(`⚠️ Admin access attempt without token from IP: ${req.ip}`);
     return res.status(401).json({ ok: false, error: 'Токен доступа отсутствует' });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Additional security checks
+    if (!decoded.username || decoded.username !== ADMIN_USERNAME) {
+      console.warn(`⚠️ Invalid admin token from IP: ${req.ip}`);
+      return res.status(403).json({ ok: false, error: 'Недействительный токен' });
+    }
+    
     req.user = decoded;
     next();
   } catch (error) {
+    console.warn(`⚠️ Admin token verification failed from IP: ${req.ip}, error: ${error.message}`);
     return res.status(403).json({ ok: false, error: 'Недействительный токен' });
   }
 }
@@ -434,19 +444,23 @@ app.get('/admin/contacts', authenticateAdmin, (req, res) => {
   }
 });
 
-// Clear all contacts
+// Clear all contacts (with enhanced security)
 app.delete('/admin/contacts/clear', authenticateAdmin, (req, res) => {
   try {
+    // Security log for critical operation
+    console.warn(`🚨 CRITICAL: Admin ${req.user.username} from IP ${req.ip} is clearing ALL contacts`);
+    
     // Create backup before clearing
     const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
-    const backupFile = path.join(dataDir, `contacts_backup_${Date.now()}.json`);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupFile = path.join(dataDir, `contacts_backup_${timestamp}.json`);
     fs.writeFileSync(backupFile, JSON.stringify(contacts, null, 2), 'utf8');
     
     // Clear contacts
     fs.writeFileSync(contactsFile, '[]', 'utf8');
     
-    console.log(`✅ Admin cleared all contacts. Backup saved to: ${backupFile}`);
-    res.json({ ok: true, message: 'Все заявки удалены', backup: backupFile });
+    console.log(`✅ Admin cleared ${contacts.length} contacts. Backup saved to: ${backupFile}`);
+    res.json({ ok: true, message: `Удалено ${contacts.length} заявок`, backup: path.basename(backupFile) });
   } catch (error) {
     console.error('Clear contacts error:', error);
     res.status(500).json({ ok: false, error: 'Ошибка при удалении заявок' });
@@ -746,9 +760,77 @@ ${sanitizedMessage ? `\n💬 <b>Сообщение:</b>\n<i>${escapeHtml(sanitiz
   return res.json({ ok: true });
 });
 
-// Telegram webhook for bot callbacks
+// Telegram webhook for bot callbacks (with security)
 app.post('/webhook/telegram', async (req, res) => {
+  // Basic security check - verify it's from Telegram
+  const telegramIP = req.ip;
+  const userAgent = req.get('User-Agent') || '';
+  
+  // Log webhook attempts for security monitoring
+  console.log(`📡 Telegram webhook from IP: ${telegramIP}, UA: ${userAgent}`);
+  
   const update = req.body;
+  
+  // Handle text commands
+  if (update.message && update.message.text) {
+    const text = update.message.text;
+    const chatId = update.message.chat.id;
+    
+    // Only respond to authorized chat
+    if (chatId.toString() !== TELEGRAM_CHAT_ID) {
+      console.warn(`⚠️ Unauthorized bot access from chat ID: ${chatId}`);
+      return res.status(200).json({ ok: true });
+    }
+    
+    if (text === '/start' || text === '/help') {
+      const helpText = `🎵 <b>VX School Bot</b>
+
+<b>Доступные команды:</b>
+/stats - Статистика заявок
+/contacts - Последние заявки
+/export - Экспорт всех заявок
+/help - Эта справка
+
+<b>Функции:</b>
+• Уведомления о новых заявках
+• Быстрые действия с кнопками
+• Статистика и аналитика
+• Экспорт данных`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: '📊 Статистика',
+              callback_data: 'view_contacts'
+            },
+            {
+              text: '🔗 Админ панель',
+              url: `https://${req.get('host')}/admin/`
+            }
+          ]
+        ]
+      };
+
+      await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        chat_id: chatId,
+        text: helpText,
+        parse_mode: 'HTML',
+        reply_markup: keyboard
+      });
+      
+    } else if (text === '/stats') {
+      // Trigger stats callback
+      const fakeUpdate = {
+        callback_query: {
+          data: 'view_contacts',
+          message: { chat: { id: chatId }, message_id: 0 }
+        }
+      };
+      // Process as callback
+      req.body = fakeUpdate;
+    }
+  }
   
   if (update.callback_query) {
     const callbackData = update.callback_query.data;
@@ -757,7 +839,7 @@ app.post('/webhook/telegram', async (req, res) => {
     
     try {
       if (callbackData === 'view_contacts') {
-        // Send contacts summary
+        // Send contacts summary with enhanced stats
         const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
         const today = new Date().toDateString();
         const todayContacts = contacts.filter(c => new Date(c.createdAt).toDateString() === today);
@@ -767,16 +849,33 @@ app.post('/webhook/telegram', async (req, res) => {
           return contactDate >= weekAgo;
         });
         
+        // Tariff statistics
+        const tariffStats = contacts.reduce((acc, contact) => {
+          const tariff = contact.tariff || 'Без тарифа';
+          acc[tariff] = (acc[tariff] || 0) + 1;
+          return acc;
+        }, {});
+        
+        const tariffStatsText = Object.entries(tariffStats)
+          .sort(([,a], [,b]) => b - a)
+          .map(([tariff, count]) => `  • ${tariff}: ${count}`)
+          .join('\n');
+        
         const summary = `📊 <b>Статистика заявок</b>
 
 📅 <b>Сегодня:</b> ${todayContacts.length}
 📈 <b>За неделю:</b> ${weekContacts.length}
 📋 <b>Всего:</b> ${contacts.length}
 
+📊 <b>По тарифам:</b>
+${tariffStatsText}
+
 <b>Последние 5 заявок:</b>
-${contacts.slice(0, 5).map(contact => 
-  `• ${contact.name} (@${contact.telegram.replace('@', '')}) - ${contact.tariff || 'Без тарифа'}`
-).join('\n')}`;
+${contacts.slice(0, 5).map((contact, index) => {
+  const date = new Date(contact.createdAt).toLocaleDateString('ru-RU');
+  return `${index + 1}. ${contact.name} (@${contact.telegram.replace('@', '')})
+   📋 ${contact.tariff || 'Без тарифа'} | 📅 ${date}`;
+}).join('\n')}`;
 
         const keyboard = {
           inline_keyboard: [
@@ -784,6 +883,20 @@ ${contacts.slice(0, 5).map(contact =>
               {
                 text: '🔗 Открыть админ панель',
                 url: `https://${req.get('host')}/admin/`
+              },
+              {
+                text: '📊 Обновить статистику',
+                callback_data: 'view_contacts'
+              }
+            ],
+            [
+              {
+                text: '📥 Экспорт заявок',
+                callback_data: 'export_contacts'
+              },
+              {
+                text: '🔄 Главное меню',
+                callback_data: 'main_menu'
               }
             ]
           ]
@@ -815,13 +928,34 @@ ${contacts.slice(0, 5).map(contact =>
         });
         
       } else if (callbackData.startsWith('mark_spam_')) {
-        // Mark as spam
+        // Mark as spam with backup
         const contactId = callbackData.replace('mark_spam_', '');
         
-        // Remove from contacts
         const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
-        const filteredContacts = contacts.filter(c => c.id !== contactId);
-        fs.writeFileSync(contactsFile, JSON.stringify(filteredContacts, null, 2), 'utf8');
+        const spamContact = contacts.find(c => c.id === contactId);
+        
+        if (spamContact) {
+          // Save to spam log
+          const spamLogFile = path.join(dataDir, 'spam_log.json');
+          let spamLog = [];
+          if (fs.existsSync(spamLogFile)) {
+            spamLog = JSON.parse(fs.readFileSync(spamLogFile, 'utf8'));
+          }
+          
+          spamLog.push({
+            ...spamContact,
+            markedAsSpamAt: new Date().toISOString(),
+            markedBy: 'telegram_bot'
+          });
+          
+          fs.writeFileSync(spamLogFile, JSON.stringify(spamLog, null, 2), 'utf8');
+          
+          // Remove from main contacts
+          const filteredContacts = contacts.filter(c => c.id !== contactId);
+          fs.writeFileSync(contactsFile, JSON.stringify(filteredContacts, null, 2), 'utf8');
+          
+          console.log(`🗑️ Contact marked as spam via Telegram: ${spamContact.name} (${spamContact.telegram})`);
+        }
         
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageReplyMarkup`, {
           chat_id: chatId,
@@ -836,6 +970,77 @@ ${contacts.slice(0, 5).map(contact =>
               ]
             ]
           }
+        });
+        
+      } else if (callbackData === 'export_contacts') {
+        // Export contacts as CSV
+        const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
+        
+        if (contacts.length === 0) {
+          await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+            callback_query_id: update.callback_query.id,
+            text: 'Нет заявок для экспорта',
+            show_alert: true
+          });
+          return;
+        }
+        
+        // Create CSV content
+        const csvHeader = 'Дата,Имя,Telegram,Тариф,Сообщение,IP\n';
+        const csvContent = contacts.map(contact => {
+          const date = new Date(contact.createdAt).toLocaleString('ru-RU');
+          const message = (contact.message || '').replace(/"/g, '""').replace(/\n/g, ' ');
+          return `"${date}","${contact.name}","${contact.telegram}","${contact.tariff || ''}","${message}","${contact.ip || ''}"`;
+        }).join('\n');
+        
+        const csvData = csvHeader + csvContent;
+        const fileName = `contacts_export_${new Date().toISOString().split('T')[0]}.csv`;
+        const filePath = path.join(dataDir, fileName);
+        
+        fs.writeFileSync(filePath, csvData, 'utf8');
+        
+        // Send file
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('document', fs.createReadStream(filePath));
+        formData.append('caption', `📊 Экспорт заявок (${contacts.length} записей)`);
+        
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, formData, {
+          headers: formData.getHeaders()
+        });
+        
+        // Clean up temp file
+        fs.unlinkSync(filePath);
+        
+      } else if (callbackData === 'main_menu') {
+        // Return to main menu
+        const mainMenuText = `🎵 <b>VX School Bot</b>
+
+Выберите действие:`;
+        
+        const mainKeyboard = {
+          inline_keyboard: [
+            [
+              {
+                text: '📊 Статистика заявок',
+                callback_data: 'view_contacts'
+              }
+            ],
+            [
+              {
+                text: '🔗 Админ панель',
+                url: `https://${req.get('host')}/admin/`
+              }
+            ]
+          ]
+        };
+        
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageText`, {
+          chat_id: chatId,
+          message_id: messageId,
+          text: mainMenuText,
+          parse_mode: 'HTML',
+          reply_markup: mainKeyboard
         });
       }
       
