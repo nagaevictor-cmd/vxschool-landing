@@ -633,6 +633,111 @@ class AdminPanel {
         }, 3000);
     }
 
+    filterContacts() {
+        if (!this.allContacts) return;
+
+        const dateFilter = document.getElementById('dateFilter').value;
+        const tariffFilter = document.getElementById('tariffFilter').value;
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+        this.filteredContacts = this.allContacts.filter(contact => {
+            // Date filter
+            if (dateFilter !== 'all') {
+                const contactDate = new Date(contact.createdAt);
+                const now = new Date();
+                
+                switch (dateFilter) {
+                    case 'today':
+                        if (contactDate.toDateString() !== now.toDateString()) return false;
+                        break;
+                    case 'week':
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        if (contactDate < weekAgo) return false;
+                        break;
+                    case 'month':
+                        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                        if (contactDate < monthAgo) return false;
+                        break;
+                }
+            }
+
+            // Tariff filter
+            if (tariffFilter !== 'all' && contact.tariff !== tariffFilter) {
+                return false;
+            }
+
+            // Search filter
+            if (searchFilter) {
+                const searchText = `${contact.name} ${contact.telegram}`.toLowerCase();
+                if (!searchText.includes(searchFilter)) return false;
+            }
+
+            return true;
+        });
+
+        this.updateContactsTable();
+    }
+
+    sortContacts(field) {
+        if (!this.filteredContacts) return;
+
+        this.filteredContacts.sort((a, b) => {
+            let aVal, bVal;
+            
+            switch (field) {
+                case 'date':
+                    aVal = new Date(a.createdAt);
+                    bVal = new Date(b.createdAt);
+                    break;
+                case 'name':
+                    aVal = a.name.toLowerCase();
+                    bVal = b.name.toLowerCase();
+                    break;
+                case 'telegram':
+                    aVal = a.telegram.toLowerCase();
+                    bVal = b.telegram.toLowerCase();
+                    break;
+                case 'tariff':
+                    aVal = a.tariff || '';
+                    bVal = b.tariff || '';
+                    break;
+                default:
+                    return 0;
+            }
+
+            if (aVal < bVal) return -1;
+            if (aVal > bVal) return 1;
+            return 0;
+        });
+
+        this.updateContactsTable();
+    }
+
+    async clearAllContacts() {
+        if (!confirm('Вы уверены, что хотите удалить ВСЕ заявки? Это действие нельзя отменить!')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/contacts/clear', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+
+            if (response.ok) {
+                this.showSuccessMessage('Все заявки удалены');
+                this.loadContacts();
+            } else {
+                this.showErrorMessage('Ошибка при удалении заявок');
+            }
+        } catch (error) {
+            console.error('Failed to clear contacts:', error);
+            this.showErrorMessage('Ошибка соединения с сервером');
+        }
+    }
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;

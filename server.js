@@ -18,10 +18,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Trust proxy for nginx
 app.set('trust proxy', 1);
+const PORT = process.env.PORT || 3000;
 
 // Admin configuration
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
