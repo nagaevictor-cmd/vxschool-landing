@@ -2056,7 +2056,7 @@ section {
 }
 
 .price.discounted .discount-price {
-  color: #4caf50;
+  color: #64b5f6;
   font-weight: 900;
 }
 
@@ -2064,13 +2064,13 @@ section {
   position: absolute;
   top: -8px;
   right: -8px;
-  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
   color: #fff;
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.4);
 }/* 
 Performance optimizations for smooth scrolling */
 .discount-banner,
@@ -2462,6 +2462,12 @@ body {
   display: flex;
   gap: 12px;
   margin-top: 16px;
+}
+
+/* Single button in plan-actions */
+.plan-actions .choose-plan:only-child {
+  flex: none;
+  width: 100%;
 }
 
 .details-btn {
