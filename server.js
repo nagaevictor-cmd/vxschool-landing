@@ -10,7 +10,6 @@ import jwt from 'jsonwebtoken';
 import session from 'express-session';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
-import FormData from 'form-data';
 
 // Load environment variables
 dotenv.config();
@@ -39,7 +38,7 @@ if (!JWT_SECRET || !ADMIN_SESSION_SECRET) {
   process.exit(1);
 }
 
-// Telegram bot configuration
+// Telegram bot configuration (only for notifications)
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
@@ -67,22 +66,19 @@ app.use((req, res, next) => {
   // Content Security Policy
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline'", // unsafe-inline needed for inline scripts
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data:",
     "media-src 'self'",
-    "connect-src 'self' https://api.telegram.org",
+    "connect-src 'self'",
     "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'self'"
   ].join('; ');
 
   res.setHeader('Content-Security-Policy', csp);
-
-  // Remove server header
   res.removeHeader('X-Powered-By');
-
   next();
 });
 
@@ -94,16 +90,16 @@ const MAX_ATTEMPTS = 3;
 // Rate limiting for admin routes
 const adminLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
+  max: 5,
   message: { ok: false, error: 'Слишком много попыток входа. Попробуйте через 15 минут.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 // Middleware
-app.use(compression()); // Enable gzip compression
+app.use(compression());
 app.use(morgan('combined'));
-app.use(express.json({ limit: '1mb' })); // Reduced limit for security
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 
@@ -116,7 +112,7 @@ if (IS_DEVELOPMENT) {
     cookie: {
       secure: false,
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 24 * 60 * 60 * 1000
     }
   }));
 }
@@ -126,7 +122,6 @@ app.use(trackVisit);
 
 // Static files with cache control
 if (IS_DEVELOPMENT) {
-  // Disable caching in development
   app.use(express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, path) => {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -135,7 +130,6 @@ if (IS_DEVELOPMENT) {
     }
   }));
 } else {
-  // Enable caching in production
   app.use(express.static(path.join(__dirname, 'public'), {
     maxAge: '1d'
   }));
@@ -182,7 +176,7 @@ if (!fs.existsSync(analyticsFile)) {
   fs.writeFileSync(analyticsFile, JSON.stringify(defaultAnalytics, null, 2), 'utf8');
 }
 
-// Admin authentication middleware (enhanced)
+// Admin authentication middleware
 function authenticateAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
@@ -195,7 +189,6 @@ function authenticateAdmin(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     
-    // Additional security checks
     if (!decoded.username || decoded.username !== ADMIN_USERNAME) {
       console.warn(`⚠️ Invalid admin token from IP: ${req.ip}`);
       return res.status(403).json({ ok: false, error: 'Недействительный токен' });
@@ -211,14 +204,12 @@ function authenticateAdmin(req, res, next) {
 
 // Analytics tracking middleware
 function trackVisit(req, res, next) {
-  // Only track page visits, not static resources or API calls
   const isPageVisit = !req.path.startsWith('/admin') && 
                      !req.path.startsWith('/api') && 
-                     !req.path.includes('.') && // Skip files with extensions
+                     !req.path.includes('.') &&
                      req.method === 'GET' &&
-                     req.path === '/'; // Only track main page visits
+                     req.path === '/';
 
-  // Skip bots and crawlers
   const userAgent = req.get('User-Agent') || '';
   const isBot = /bot|crawler|spider|crawling/i.test(userAgent);
 
@@ -228,12 +219,10 @@ function trackVisit(req, res, next) {
       const today = new Date().toISOString().split('T')[0];
       const clientIP = req.ip || req.socket.remoteAddress;
 
-      // Initialize unique visitors tracking if not exists
       if (!analyticsData.uniqueVisitors) {
         analyticsData.uniqueVisitors = {};
       }
 
-      // Track unique visitors per day
       if (!analyticsData.uniqueVisitors[today]) {
         analyticsData.uniqueVisitors[today] = new Set();
       }
@@ -245,7 +234,6 @@ function trackVisit(req, res, next) {
         todayVisitors.add(clientIP);
         analyticsData.uniqueVisitors[today] = Array.from(todayVisitors);
 
-        // Track daily visits (only unique visitors)
         const todayVisit = analyticsData.visits.find(v => v.date === today);
         if (todayVisit) {
           todayVisit.count++;
@@ -253,7 +241,6 @@ function trackVisit(req, res, next) {
           analyticsData.visits.push({ date: today, count: 1 });
         }
 
-        // Track traffic sources (only for unique visitors)
         const referer = req.get('Referer');
         let source = 'Прямые переходы';
         if (referer && !referer.includes(req.get('Host'))) {
@@ -274,12 +261,10 @@ function trackVisit(req, res, next) {
         }
       }
 
-      // Keep only last 30 days
       analyticsData.visits = analyticsData.visits
         .filter(v => new Date(v.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      // Clean up old unique visitors data
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       Object.keys(analyticsData.uniqueVisitors).forEach(date => {
         if (date < thirtyDaysAgo) {
@@ -327,7 +312,7 @@ function getAnalytics() {
 // Input validation and sanitization
 function sanitizeInput(input) {
   if (typeof input !== 'string') return '';
-  return input.trim().slice(0, 1000); // Limit length and trim
+  return input.trim().slice(0, 1000);
 }
 
 function validateTelegram(telegram) {
@@ -340,7 +325,6 @@ function validateName(name) {
 }
 
 // Admin Routes
-// Admin login
 app.post('/admin/login', adminLoginLimiter, async (req, res) => {
   const { username, password } = req.body;
 
@@ -349,11 +333,8 @@ app.post('/admin/login', adminLoginLimiter, async (req, res) => {
   }
 
   try {
-    // Secure admin authentication with timing attack protection
     const usernameMatch = username === ADMIN_USERNAME;
     const passwordMatch = password === ADMIN_PASSWORD;
-
-    // Always perform both checks to prevent timing attacks
     const isValid = usernameMatch && passwordMatch;
 
     if (isValid) {
@@ -363,7 +344,6 @@ app.post('/admin/login', adminLoginLimiter, async (req, res) => {
         { expiresIn: '24h' }
       );
 
-      // Session only in development
       if (IS_DEVELOPMENT && req.session) {
         req.session.adminUser = { username: ADMIN_USERNAME };
       }
@@ -385,7 +365,6 @@ app.post('/admin/login', adminLoginLimiter, async (req, res) => {
   }
 });
 
-// Admin token verification
 app.post('/admin/verify', (req, res) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
@@ -402,7 +381,6 @@ app.post('/admin/verify', (req, res) => {
   }
 });
 
-// Admin dashboard data
 app.get('/admin/dashboard', authenticateAdmin, (req, res) => {
   try {
     const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
@@ -431,11 +409,9 @@ app.get('/admin/dashboard', authenticateAdmin, (req, res) => {
   }
 });
 
-// Admin contacts
 app.get('/admin/contacts', authenticateAdmin, (req, res) => {
   try {
     const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
-    // Sort by date, newest first
     contacts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json(contacts);
   } catch (error) {
@@ -444,19 +420,15 @@ app.get('/admin/contacts', authenticateAdmin, (req, res) => {
   }
 });
 
-// Clear all contacts (with enhanced security)
 app.delete('/admin/contacts/clear', authenticateAdmin, (req, res) => {
   try {
-    // Security log for critical operation
     console.warn(`🚨 CRITICAL: Admin ${req.user.username} from IP ${req.ip} is clearing ALL contacts`);
     
-    // Create backup before clearing
     const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupFile = path.join(dataDir, `contacts_backup_${timestamp}.json`);
     fs.writeFileSync(backupFile, JSON.stringify(contacts, null, 2), 'utf8');
     
-    // Clear contacts
     fs.writeFileSync(contactsFile, '[]', 'utf8');
     
     console.log(`✅ Admin cleared ${contacts.length} contacts. Backup saved to: ${backupFile}`);
@@ -467,19 +439,16 @@ app.delete('/admin/contacts/clear', authenticateAdmin, (req, res) => {
   }
 });
 
-// Delete single contact
 app.delete('/admin/contacts/:id', authenticateAdmin, (req, res) => {
   try {
     const contactId = req.params.id;
     const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
     
-    // Find contact index
     const contactIndex = contacts.findIndex(c => c.id === contactId);
     if (contactIndex === -1) {
       return res.status(404).json({ ok: false, error: 'Заявка не найдена' });
     }
     
-    // Remove contact
     const deletedContact = contacts.splice(contactIndex, 1)[0];
     fs.writeFileSync(contactsFile, JSON.stringify(contacts, null, 2), 'utf8');
     
@@ -491,7 +460,6 @@ app.delete('/admin/contacts/:id', authenticateAdmin, (req, res) => {
   }
 });
 
-// Admin settings
 app.get('/admin/settings', authenticateAdmin, (req, res) => {
   try {
     const settings = getSettings();
@@ -516,7 +484,6 @@ app.post('/admin/settings', authenticateAdmin, (req, res) => {
   }
 });
 
-// Admin analytics
 app.get('/admin/analytics', authenticateAdmin, (req, res) => {
   try {
     const analytics = getAnalytics();
@@ -536,7 +503,7 @@ app.get('/admin/analytics', authenticateAdmin, (req, res) => {
 
     res.json({
       visits: filteredVisits,
-      sources: analytics.sources.slice(0, 10) // Top 10 sources
+      sources: analytics.sources.slice(0, 10)
     });
   } catch (error) {
     console.error('Analytics error:', error);
@@ -544,7 +511,6 @@ app.get('/admin/analytics', authenticateAdmin, (req, res) => {
   }
 });
 
-// Quick actions
 app.post('/admin/toggle-discount', authenticateAdmin, (req, res) => {
   try {
     const settings = getSettings();
@@ -587,7 +553,6 @@ app.get('/api/settings', (req, res) => {
   try {
     const settings = getSettings();
 
-    // Only return public settings
     const publicSettings = {
       discountEnabled: settings.discountEnabled,
       discountPercent: settings.discountPercent,
@@ -608,7 +573,7 @@ app.get('/api/settings', (req, res) => {
   }
 });
 
-// Contact endpoint
+// Contact endpoint (simplified - only notifications, no bot interactions)
 app.post('/contact', async (req, res) => {
   const clientIP = req.ip || req.socket.remoteAddress;
 
@@ -617,7 +582,6 @@ app.post('/contact', async (req, res) => {
   const attempts = contactAttempts.get(clientIP) || [];
   const recentAttempts = attempts.filter(time => now - time < RATE_LIMIT_WINDOW);
 
-  // Disable rate limiting in development
   if (!IS_DEVELOPMENT && recentAttempts.length >= MAX_ATTEMPTS) {
     return res.status(429).json({
       ok: false,
@@ -625,7 +589,6 @@ app.post('/contact', async (req, res) => {
     });
   }
 
-  // Update attempts
   recentAttempts.push(now);
   contactAttempts.set(clientIP, recentAttempts);
 
@@ -637,7 +600,7 @@ app.post('/contact', async (req, res) => {
   const sanitizedMessage = sanitizeInput(message);
   const sanitizedTariff = tariff ? sanitizeInput(tariff) : null;
 
-  // Validate required fields (message is now optional)
+  // Validate required fields
   if (!sanitizedName) {
     return res.status(400).json({ ok: false, error: 'Пожалуйста, укажите ваше имя.' });
   }
@@ -646,17 +609,14 @@ app.post('/contact', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Пожалуйста, укажите ваш Telegram.' });
   }
 
-  // Validate name
   if (!validateName(sanitizedName)) {
     return res.status(400).json({ ok: false, error: 'Имя должно содержать от 2 до 50 символов и состоять только из букв.' });
   }
 
-  // Validate telegram
   if (!validateTelegram(sanitizedTelegram)) {
     return res.status(400).json({ ok: false, error: 'Telegram username должен содержать от 5 до 32 символов (буквы, цифры, подчеркивания).' });
   }
 
-  // Validate message length (only if message is provided)
   if (sanitizedMessage && sanitizedMessage.length < 10) {
     return res.status(400).json({ ok: false, error: 'Сообщение слишком короткое. Напишите хотя бы 10 символов.' });
   }
@@ -665,7 +625,6 @@ app.post('/contact', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Сообщение слишком длинное. Максимум 1000 символов.' });
   }
 
-  // Validate tariff if provided
   const validTariffs = ['Базовый', 'Групповой', 'Индивидуальный', 'Консультация'];
   if (sanitizedTariff && !validTariffs.includes(sanitizedTariff)) {
     return res.status(400).json({ ok: false, error: 'Выберите корректный тариф из списка.' });
@@ -677,7 +636,7 @@ app.post('/contact', async (req, res) => {
     telegram: sanitizedTelegram,
     message: sanitizedMessage,
     tariff: sanitizedTariff,
-    ip: clientIP, // Log IP for security
+    ip: clientIP,
     createdAt: new Date().toISOString()
   };
 
@@ -691,10 +650,9 @@ app.post('/contact', async (req, res) => {
     return res.status(500).json({ ok: false, error: 'Произошла техническая ошибка. Попробуйте отправить заявку через несколько минут.' });
   }
 
-  // Send to Telegram (skip in development mode without credentials)
+  // Send simple notification to Telegram (no bot interactions)
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
     try {
-      // Escape HTML for Telegram
       const escapeHtml = (text) => text
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -712,385 +670,29 @@ ${sanitizedMessage ? `\n💬 <b>Сообщение:</b>\n<i>${escapeHtml(sanitiz
 
 <b>ID заявки:</b> <code>${entry.id}</code>`;
 
-      // Create inline keyboard with quick actions
-      const keyboard = {
-        inline_keyboard: [
-          [
-            {
-              text: '💬 Написать в Telegram',
-              url: `https://t.me/${sanitizedTelegram.replace('@', '')}`
-            }
-          ],
-          [
-            {
-              text: '📊 Админ панель',
-              url: `https://${req.get('host')}/admin/`
-            },
-            {
-              text: '📋 Все заявки',
-              callback_data: `view_contacts`
-            }
-          ],
-          [
-            {
-              text: '✅ Обработано',
-              callback_data: `mark_processed_${entry.id}`
-            },
-            {
-              text: '❌ Спам',
-              callback_data: `mark_spam_${entry.id}`
-            }
-          ]
-        ]
-      };
-
       await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         chat_id: TELEGRAM_CHAT_ID,
         text: telegramMessage,
-        parse_mode: 'HTML',
-        reply_markup: keyboard
+        parse_mode: 'HTML'
       });
 
     } catch (telegramErr) {
       console.error('❌ Failed to send to Telegram:', telegramErr.message);
-      // Don't fail the request if Telegram fails
     }
   }
 
   return res.json({ ok: true });
 });
 
-// Telegram webhook for bot callbacks (with security)
-app.post('/webhook/telegram', async (req, res) => {
-  // Basic security check - verify it's from Telegram
-  const telegramIP = req.ip;
-  const userAgent = req.get('User-Agent') || '';
-  
-  // Log webhook attempts for security monitoring
-  console.log(`📡 Telegram webhook from IP: ${telegramIP}, UA: ${userAgent}`);
-  
-  const update = req.body;
-  
-  // Handle text commands
-  if (update.message && update.message.text) {
-    const text = update.message.text;
-    const chatId = update.message.chat.id;
-    
-    // Only respond to authorized chat
-    if (chatId.toString() !== TELEGRAM_CHAT_ID) {
-      console.warn(`⚠️ Unauthorized bot access from chat ID: ${chatId}`);
-      return res.status(200).json({ ok: true });
-    }
-    
-    if (text === '/start' || text === '/help') {
-      const helpText = `🎵 <b>VX School Bot</b>
-
-<b>Доступные команды:</b>
-/stats - Статистика заявок
-/contacts - Последние заявки
-/export - Экспорт всех заявок
-/help - Эта справка
-
-<b>Функции:</b>
-• Уведомления о новых заявках
-• Быстрые действия с кнопками
-• Статистика и аналитика
-• Экспорт данных`;
-
-      const keyboard = {
-        inline_keyboard: [
-          [
-            {
-              text: '📊 Статистика',
-              callback_data: 'view_contacts'
-            },
-            {
-              text: '🔗 Админ панель',
-              url: `https://${req.get('host')}/admin/`
-            }
-          ]
-        ]
-      };
-
-      await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        chat_id: chatId,
-        text: helpText,
-        parse_mode: 'HTML',
-        reply_markup: keyboard
-      });
-      
-    } else if (text === '/stats') {
-      // Trigger stats callback
-      const fakeUpdate = {
-        callback_query: {
-          data: 'view_contacts',
-          message: { chat: { id: chatId }, message_id: 0 }
-        }
-      };
-      // Process as callback
-      req.body = fakeUpdate;
-    }
-  }
-  
-  if (update.callback_query) {
-    const callbackData = update.callback_query.data;
-    const chatId = update.callback_query.message.chat.id;
-    const messageId = update.callback_query.message.message_id;
-    
-    try {
-      if (callbackData === 'view_contacts') {
-        // Send contacts summary with enhanced stats
-        const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
-        const today = new Date().toDateString();
-        const todayContacts = contacts.filter(c => new Date(c.createdAt).toDateString() === today);
-        const weekContacts = contacts.filter(c => {
-          const contactDate = new Date(c.createdAt);
-          const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-          return contactDate >= weekAgo;
-        });
-        
-        // Tariff statistics
-        const tariffStats = contacts.reduce((acc, contact) => {
-          const tariff = contact.tariff || 'Без тарифа';
-          acc[tariff] = (acc[tariff] || 0) + 1;
-          return acc;
-        }, {});
-        
-        const tariffStatsText = Object.entries(tariffStats)
-          .sort(([,a], [,b]) => b - a)
-          .map(([tariff, count]) => `  • ${tariff}: ${count}`)
-          .join('\n');
-        
-        const summary = `📊 <b>Статистика заявок</b>
-
-📅 <b>Сегодня:</b> ${todayContacts.length}
-📈 <b>За неделю:</b> ${weekContacts.length}
-📋 <b>Всего:</b> ${contacts.length}
-
-📊 <b>По тарифам:</b>
-${tariffStatsText}
-
-<b>Последние 5 заявок:</b>
-${contacts.slice(0, 5).map((contact, index) => {
-  const date = new Date(contact.createdAt).toLocaleDateString('ru-RU');
-  return `${index + 1}. ${contact.name} (@${contact.telegram.replace('@', '')})
-   📋 ${contact.tariff || 'Без тарифа'} | 📅 ${date}`;
-}).join('\n')}`;
-
-        const keyboard = {
-          inline_keyboard: [
-            [
-              {
-                text: '🔗 Открыть админ панель',
-                url: `https://${req.get('host')}/admin/`
-              },
-              {
-                text: '📊 Обновить статистику',
-                callback_data: 'view_contacts'
-              }
-            ],
-            [
-              {
-                text: '📥 Экспорт заявок',
-                callback_data: 'export_contacts'
-              },
-              {
-                text: '🔄 Главное меню',
-                callback_data: 'main_menu'
-              }
-            ]
-          ]
-        };
-
-        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageText`, {
-          chat_id: chatId,
-          message_id: messageId,
-          text: summary,
-          parse_mode: 'HTML',
-          reply_markup: keyboard
-        });
-        
-      } else if (callbackData.startsWith('mark_processed_')) {
-        // Mark as processed
-        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageReplyMarkup`, {
-          chat_id: chatId,
-          message_id: messageId,
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: '✅ Заявка обработана',
-                  callback_data: 'processed'
-                }
-              ]
-            ]
-          }
-        });
-        
-      } else if (callbackData.startsWith('mark_spam_')) {
-        // Mark as spam with backup
-        const contactId = callbackData.replace('mark_spam_', '');
-        
-        const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
-        const spamContact = contacts.find(c => c.id === contactId);
-        
-        if (spamContact) {
-          // Save to spam log
-          const spamLogFile = path.join(dataDir, 'spam_log.json');
-          let spamLog = [];
-          if (fs.existsSync(spamLogFile)) {
-            spamLog = JSON.parse(fs.readFileSync(spamLogFile, 'utf8'));
-          }
-          
-          spamLog.push({
-            ...spamContact,
-            markedAsSpamAt: new Date().toISOString(),
-            markedBy: 'telegram_bot'
-          });
-          
-          fs.writeFileSync(spamLogFile, JSON.stringify(spamLog, null, 2), 'utf8');
-          
-          // Remove from main contacts
-          const filteredContacts = contacts.filter(c => c.id !== contactId);
-          fs.writeFileSync(contactsFile, JSON.stringify(filteredContacts, null, 2), 'utf8');
-          
-          console.log(`🗑️ Contact marked as spam via Telegram: ${spamContact.name} (${spamContact.telegram})`);
-        }
-        
-        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageReplyMarkup`, {
-          chat_id: chatId,
-          message_id: messageId,
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: '🗑️ Помечено как спам',
-                  callback_data: 'spam'
-                }
-              ]
-            ]
-          }
-        });
-        
-      } else if (callbackData === 'export_contacts') {
-        // Export contacts as CSV
-        const contacts = JSON.parse(fs.readFileSync(contactsFile, 'utf8'));
-        
-        if (contacts.length === 0) {
-          await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
-            callback_query_id: update.callback_query.id,
-            text: 'Нет заявок для экспорта',
-            show_alert: true
-          });
-          return;
-        }
-        
-        // Create CSV content
-        const csvHeader = 'Дата,Имя,Telegram,Тариф,Сообщение,IP\n';
-        const csvContent = contacts.map(contact => {
-          const date = new Date(contact.createdAt).toLocaleString('ru-RU');
-          const message = (contact.message || '').replace(/"/g, '""').replace(/\n/g, ' ');
-          return `"${date}","${contact.name}","${contact.telegram}","${contact.tariff || ''}","${message}","${contact.ip || ''}"`;
-        }).join('\n');
-        
-        const csvData = csvHeader + csvContent;
-        const fileName = `contacts_export_${new Date().toISOString().split('T')[0]}.csv`;
-        const filePath = path.join(dataDir, fileName);
-        
-        fs.writeFileSync(filePath, csvData, 'utf8');
-        
-        // Send file
-        const formData = new FormData();
-        formData.append('chat_id', chatId);
-        formData.append('document', fs.createReadStream(filePath));
-        formData.append('caption', `📊 Экспорт заявок (${contacts.length} записей)`);
-        
-        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, formData, {
-          headers: formData.getHeaders()
-        });
-        
-        // Clean up temp file
-        fs.unlinkSync(filePath);
-        
-      } else if (callbackData === 'main_menu') {
-        // Return to main menu
-        const mainMenuText = `🎵 <b>VX School Bot</b>
-
-Выберите действие:`;
-        
-        const mainKeyboard = {
-          inline_keyboard: [
-            [
-              {
-                text: '📊 Статистика заявок',
-                callback_data: 'view_contacts'
-              }
-            ],
-            [
-              {
-                text: '🔗 Админ панель',
-                url: `https://${req.get('host')}/admin/`
-              }
-            ]
-          ]
-        };
-        
-        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageText`, {
-          chat_id: chatId,
-          message_id: messageId,
-          text: mainMenuText,
-          parse_mode: 'HTML',
-          reply_markup: mainKeyboard
-        });
-      }
-      
-    } catch (error) {
-      console.error('Telegram webhook error:', error);
-    }
-  }
-  
-  res.status(200).json({ ok: true });
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-
-  // Handle specific error types
-  if (err.type === 'entity.too.large') {
-    return res.status(413).json({ ok: false, error: 'Отправленные данные слишком большие. Сократите сообщение.' });
-  }
-
-  if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({ ok: false, error: 'Ошибка в формате данных. Обновите страницу и попробуйте снова.' });
-  }
-
-  if (err.code === 'ECONNREFUSED') {
-    return res.status(503).json({ ok: false, error: 'Сервис временно недоступен. Попробуйте позже.' });
-  }
-
-  res.status(500).json({ ok: false, error: 'Произошла техническая ошибка. Попробуйте отправить заявку позже.' });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ ok: false, error: 'Страница не найдена.' });
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
-
+// Start server
 app.listen(PORT, () => {
-  console.log(`✅ VX School landing running on port ${PORT}`);
-  console.log(`🔒 Security headers enabled`);
-  console.log(`⚡ Rate limiting active`);
-  console.log(`🛡️ Admin panel available at /admin/`);
+  console.log(`🚀 VX School server running on port ${PORT}`);
+  console.log(`📊 Admin panel: http://localhost:${PORT}/admin/`);
+  console.log(`🔧 Environment: ${IS_DEVELOPMENT ? 'Development' : 'Production'}`);
+  console.log(`📱 Telegram notifications: ${TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID ? 'Enabled' : 'Disabled'}`);
 });
