@@ -54,6 +54,125 @@ if (IS_DEVELOPMENT && (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID)) {
   console.warn('⚠️  Development mode: Telegram notifications disabled');
 }
 
+// Ensure data directory exists
+const dataDir = path.join(__dirname, 'data');
+const contactsFile = path.join(dataDir, 'contacts.json');
+const settingsFile = path.join(dataDir, 'settings.json');
+const analyticsFile = path.join(dataDir, 'analytics.json');
+
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+if (!fs.existsSync(contactsFile)) {
+  fs.writeFileSync(contactsFile, '[]', 'utf8');
+}
+
+if (!fs.existsSync(settingsFile)) {
+  const defaultSettings = {
+    discountEnabled: false,
+    discountPercent: 20,
+    discountText: 'Скидка 20% на все курсы!',
+    basicAvailable: true,
+    groupAvailable: true,
+    individualAvailable: true,
+    consultationAvailable: true,
+    basicPrice: 10000,
+    groupPrice: 30000,
+    individualPrice: 'По запросу',
+    contactTelegram: '@vxschool',
+    contactEmail: 'contact@vxschool.com'
+  };
+  fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, null, 2), 'utf8');
+}
+
+if (!fs.existsSync(analyticsFile)) {
+  const defaultAnalytics = {
+    visits: [],
+    sources: [],
+    uniqueVisitors: {}
+  };
+  fs.writeFileSync(analyticsFile, JSON.stringify(defaultAnalytics, null, 2), 'utf8');
+}
+
+// Analytics tracking middleware
+function trackVisit(req, res, next) {
+  const isPageVisit = !req.path.startsWith('/admin') && 
+                     !req.path.startsWith('/api') && 
+                     !req.path.includes('.') &&
+                     req.method === 'GET' &&
+                     req.path === '/';
+
+  const userAgent = req.get('User-Agent') || '';
+  const isBot = /bot|crawler|spider|crawling/i.test(userAgent);
+
+  if (isPageVisit && !isBot) {
+    try {
+      const analyticsData = JSON.parse(fs.readFileSync(analyticsFile, 'utf8'));
+      const today = new Date().toISOString().split('T')[0];
+      const clientIP = req.ip || req.socket.remoteAddress;
+
+      if (!analyticsData.uniqueVisitors) {
+        analyticsData.uniqueVisitors = {};
+      }
+
+      if (!analyticsData.uniqueVisitors[today]) {
+        analyticsData.uniqueVisitors[today] = new Set();
+      }
+
+      const todayVisitors = new Set(analyticsData.uniqueVisitors[today]);
+      const isUniqueVisitor = !todayVisitors.has(clientIP);
+
+      if (isUniqueVisitor) {
+        todayVisitors.add(clientIP);
+        analyticsData.uniqueVisitors[today] = Array.from(todayVisitors);
+
+        const todayVisit = analyticsData.visits.find(v => v.date === today);
+        if (todayVisit) {
+          todayVisit.count++;
+        } else {
+          analyticsData.visits.push({ date: today, count: 1 });
+        }
+
+        const referer = req.get('Referer');
+        let source = 'Прямые переходы';
+        if (referer && !referer.includes(req.get('Host'))) {
+          if (referer.includes('google')) source = 'Google';
+          else if (referer.includes('yandex')) source = 'Yandex';
+          else if (referer.includes('vk.com')) source = 'VKontakte';
+          else if (referer.includes('t.me')) source = 'Telegram';
+          else if (referer.includes('instagram')) source = 'Instagram';
+          else if (referer.includes('facebook')) source = 'Facebook';
+          else source = 'Другие сайты';
+        }
+
+        const sourceEntry = analyticsData.sources.find(s => s.name === source);
+        if (sourceEntry) {
+          sourceEntry.count++;
+        } else {
+          analyticsData.sources.push({ name: source, count: 1 });
+        }
+      }
+
+      analyticsData.visits = analyticsData.visits
+        .filter(v => new Date(v.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      Object.keys(analyticsData.uniqueVisitors).forEach(date => {
+        if (date < thirtyDaysAgo) {
+          delete analyticsData.uniqueVisitors[date];
+        }
+      });
+
+      fs.writeFileSync(analyticsFile, JSON.stringify(analyticsData, null, 2), 'utf8');
+    } catch (error) {
+      console.error('Analytics tracking error:', error);
+    }
+  }
+  next();
+}
+
 // Security middleware
 app.use((req, res, next) => {
   // Security headers
@@ -135,47 +254,6 @@ if (IS_DEVELOPMENT) {
   }));
 }
 
-// Ensure data directory exists
-const dataDir = path.join(__dirname, 'data');
-const contactsFile = path.join(dataDir, 'contacts.json');
-const settingsFile = path.join(dataDir, 'settings.json');
-const analyticsFile = path.join(dataDir, 'analytics.json');
-
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-if (!fs.existsSync(contactsFile)) {
-  fs.writeFileSync(contactsFile, '[]', 'utf8');
-}
-
-if (!fs.existsSync(settingsFile)) {
-  const defaultSettings = {
-    discountEnabled: false,
-    discountPercent: 20,
-    discountText: 'Скидка 20% на все курсы!',
-    basicAvailable: true,
-    groupAvailable: true,
-    individualAvailable: true,
-    consultationAvailable: true,
-    basicPrice: 10000,
-    groupPrice: 30000,
-    individualPrice: 'По запросу',
-    contactTelegram: '@vxschool',
-    contactEmail: 'contact@vxschool.com'
-  };
-  fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, null, 2), 'utf8');
-}
-
-if (!fs.existsSync(analyticsFile)) {
-  const defaultAnalytics = {
-    visits: [],
-    sources: [],
-    uniqueVisitors: {}
-  };
-  fs.writeFileSync(analyticsFile, JSON.stringify(defaultAnalytics, null, 2), 'utf8');
-}
-
 // Admin authentication middleware
 function authenticateAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -200,84 +278,6 @@ function authenticateAdmin(req, res, next) {
     console.warn(`⚠️ Admin token verification failed from IP: ${req.ip}, error: ${error.message}`);
     return res.status(403).json({ ok: false, error: 'Недействительный токен' });
   }
-}
-
-// Analytics tracking middleware
-function trackVisit(req, res, next) {
-  const isPageVisit = !req.path.startsWith('/admin') && 
-                     !req.path.startsWith('/api') && 
-                     !req.path.includes('.') &&
-                     req.method === 'GET' &&
-                     req.path === '/';
-
-  const userAgent = req.get('User-Agent') || '';
-  const isBot = /bot|crawler|spider|crawling/i.test(userAgent);
-
-  if (isPageVisit && !isBot) {
-    try {
-      const analyticsData = JSON.parse(fs.readFileSync(analyticsFile, 'utf8'));
-      const today = new Date().toISOString().split('T')[0];
-      const clientIP = req.ip || req.socket.remoteAddress;
-
-      if (!analyticsData.uniqueVisitors) {
-        analyticsData.uniqueVisitors = {};
-      }
-
-      if (!analyticsData.uniqueVisitors[today]) {
-        analyticsData.uniqueVisitors[today] = new Set();
-      }
-
-      const todayVisitors = new Set(analyticsData.uniqueVisitors[today]);
-      const isUniqueVisitor = !todayVisitors.has(clientIP);
-
-      if (isUniqueVisitor) {
-        todayVisitors.add(clientIP);
-        analyticsData.uniqueVisitors[today] = Array.from(todayVisitors);
-
-        const todayVisit = analyticsData.visits.find(v => v.date === today);
-        if (todayVisit) {
-          todayVisit.count++;
-        } else {
-          analyticsData.visits.push({ date: today, count: 1 });
-        }
-
-        const referer = req.get('Referer');
-        let source = 'Прямые переходы';
-        if (referer && !referer.includes(req.get('Host'))) {
-          if (referer.includes('google')) source = 'Google';
-          else if (referer.includes('yandex')) source = 'Yandex';
-          else if (referer.includes('vk.com')) source = 'VKontakte';
-          else if (referer.includes('t.me')) source = 'Telegram';
-          else if (referer.includes('instagram')) source = 'Instagram';
-          else if (referer.includes('facebook')) source = 'Facebook';
-          else source = 'Другие сайты';
-        }
-
-        const sourceEntry = analyticsData.sources.find(s => s.name === source);
-        if (sourceEntry) {
-          sourceEntry.count++;
-        } else {
-          analyticsData.sources.push({ name: source, count: 1 });
-        }
-      }
-
-      analyticsData.visits = analyticsData.visits
-        .filter(v => new Date(v.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      Object.keys(analyticsData.uniqueVisitors).forEach(date => {
-        if (date < thirtyDaysAgo) {
-          delete analyticsData.uniqueVisitors[date];
-        }
-      });
-
-      fs.writeFileSync(analyticsFile, JSON.stringify(analyticsData, null, 2), 'utf8');
-    } catch (error) {
-      console.error('Analytics tracking error:', error);
-    }
-  }
-  next();
 }
 
 // Helper functions
