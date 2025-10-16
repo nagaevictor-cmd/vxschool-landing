@@ -413,9 +413,9 @@ class SettingsIntegration {
                 gap: 4px;
                 position: relative;
                 padding: 8px;
-                background: rgba(255, 107, 53, 0.08);
+                background: rgba(76, 175, 80, 0.08);
                 border-radius: 8px;
-                border: 1px solid rgba(255, 107, 53, 0.2);
+                border: 1px solid rgba(76, 175, 80, 0.2);
             }
             
             .original-price {
@@ -427,7 +427,7 @@ class SettingsIntegration {
             }
             
             .discounted-price {
-                color: #ff6b35;
+                color: #4caf50;
                 font-weight: 800;
                 font-size: 24px;
             }
@@ -436,18 +436,18 @@ class SettingsIntegration {
                 position: absolute;
                 top: -6px;
                 right: -6px;
-                background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+                background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
                 color: white;
                 font-size: 10px;
                 font-weight: 600;
                 padding: 4px 8px;
                 border-radius: 12px;
-                box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+                box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
             }
             
             /* Pricing card discount highlight */
             .pricing-card:has(.discount-badge) {
-                border: 1px solid rgba(255, 107, 53, 0.4);
+                border: 1px solid rgba(76, 175, 80, 0.4);
                 box-shadow: 0 4px 20px rgba(255, 107, 53, 0.1);
             }
             
