@@ -134,7 +134,10 @@
             <li>Домашние задания</li>
             <li>Доступ к материалам навсегда</li>
           </ul>
-          <button class="plan-btn choose-plan" data-tariff="Базовый">Выбрать</button>
+          <div class="plan-actions">
+            <button class="plan-btn details-btn" onclick="openTariffModal('basic')">Подробнее</button>
+            <button class="plan-btn choose-plan" data-tariff="Базовый">Выбрать</button>
+          </div>
         </div>
 
         <div class="pricing-card popular" data-package="advanced">
@@ -150,7 +153,10 @@
             <li>Подготовка к релизу</li>
             <li>Доступ к материалам навсегда</li>
           </ul>
-          <button class="plan-btn popular-btn choose-plan" data-tariff="Продвинутый">Выбрать</button>
+          <div class="plan-actions">
+            <button class="plan-btn details-btn" onclick="openTariffModal('advanced')">Подробнее</button>
+            <button class="plan-btn popular-btn choose-plan" data-tariff="Продвинутый">Выбрать</button>
+          </div>
         </div>
 
         <div class="pricing-card" data-package="paid-consultation">
@@ -207,7 +213,7 @@
       </div>
     </section>
 
-    <section id="teachers" class="teachers">
+    <section id="pricing" class="priciners">
       <div class="section-head">
         <h2>ПРЕПОДАВАТЕЛЬ</h2>
       </div>
@@ -659,6 +665,38 @@
       <span class="sticky-text">Записаться на курс</span>
       <span class="sticky-price" id="sticky-price">от 10 000 ₽</span>
     </button>
+  </div>
+
+  <!-- Модальные окна тарифов -->
+  <div id="tariffModal" class="tariff-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle"></h3>
+        <button class="modal-close" onclick="closeTariffModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Содержимое будет добавлено через JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button class="plan-btn choose-plan" id="modalChooseBtn">Выбрать тариф</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальные окна тарифов -->
+  <div id="tariffModal" class="tariff-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle"></h3>
+        <button class="modal-close" onclick="closeTariffModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Содержимое будет добавлено через JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button class="plan-btn choose-plan" id="modalChooseBtn">Выбрать тариф</button>
+      </div>
+    </div>
   </div>
 
 

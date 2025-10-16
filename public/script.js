@@ -600,4 +600,336 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Tariff Modal Functions
+function openTariffModal(tariffType) {
+  const modal = document.getElementById('tariffModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalChooseBtn = document.getElementById('modalChooseBtn');
+  
+  if (tariffType === 'basic') {
+    modalTitle.textContent = 'БАЗОВЫЙ ТАРИФ';
+    modalChooseBtn.setAttribute('data-tariff', 'Базовый');
+    modalBody.innerHTML = `
+      <p><strong>8 уроков × 1,5–2 ч = 12–14 часов</strong></p>
+      <p><strong>Цель:</strong> первый трек в стиле Hard Techno / Schranz с нуля</p>
+      
+      <div class="lesson-block">
+        <h5>1. Основы Ableton Live</h5>
+        <p>Настройка звука и интерфейса<br>
+        Навигация, горячие клавиши<br>
+        Организация рабочего проекта<br>
+        Как строится хард техно трек</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>2. Ритм и грув</h5>
+        <p>Создание кика и хэтов<br>
+        Groove pool, сайдчейн, паттерны 4/4<br>
+        Основы плотного грува</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>3. Бас и низкие частоты</h5>
+        <p>Создание баса в Operator / Wavetable<br>
+        Работа с фильтрами и компрессией<br>
+        Совмещение кика и баса</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>4. Перкуссия и движение</h5>
+        <p>Клэпы, шейкеры, текстуры<br>
+        Лейеринг и микрошейпинг<br>
+        Как "раскачать" ритм</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>5. Аранжировка</h5>
+        <p>Построение формы трека<br>
+        Интро, основной дроп, брейк<br>
+        Динамика и развитие</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>6. Эффекты и финал</h5>
+        <p>Реверб, дилей, дисторшн<br>
+        Финальная обработка<br>
+        Экспорт и прослушивание</p>
+      </div>
+      
+      <h4>Результат:</h4>
+      <p>готовый первый трек и уверенное владение Ableton</p>
+      
+      <h4>Длительность:</h4>
+      <p>12–14 часов (8 занятий)</p>
+    `;
+  } else if (tariffType === 'advanced') {
+    modalTitle.textContent = 'ПРОДВИНУТЫЙ ТАРИФ';
+    modalChooseBtn.setAttribute('data-tariff', 'Продвинутый');
+    modalBody.innerHTML = `
+      <p><strong>14 уроков × 1,5–2 ч = 21–26 часов</strong></p>
+      <p><strong>Цель:</strong> профессиональный трек уровня релиза, освоение продвинутого саунд-дизайна и миксинга</p>
+      
+      <div class="lesson-block">
+        <h5>1. Анализ и цели</h5>
+        <p>Разбор твоих треков<br>
+        Анализ референсов<br>
+        Определение желаемого звучания</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>2. Саунд-дизайн (основа звучания)</h5>
+        <p>Кик-дизайн и ресемплинг<br>
+        Создание движущегося баса<br>
+        Работа с дисторшном и фильтрацией</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>3. Грув и перкуссия</h5>
+        <p>Продвинутая ритмика<br>
+        Слои и микро-шейпы<br>
+        Перкуссионные FX и текстуры</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>4. Лиды и атмосфера</h5>
+        <p>Сложные лиды в Wavetable и Operator<br>
+        Атмосферные пэды и дроны<br>
+        FX, реверсы, саунд-дизайн переходов</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>5. Аранжировка</h5>
+        <p>Построение структуры трека<br>
+        Контроль энергии и внимания<br>
+        Работа с динамикой</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>6. Миксинг</h5>
+        <p>Баланс частот, glue-компрессия<br>
+        Пространство, ширина, reverb/delay<br>
+        Проверка звучания на разных системах</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>7. Финал и релиз</h5>
+        <p>Финальный разбор твоего трека<br>
+        Loudness и экспорт<br>
+        Подготовка к релизу (обложки, платформы)<br>
+        План развития и фидбэк</p>
+      </div>
+      
+      <h4>Результат:</h4>
+      <p>готовый профессиональный трек, понимание звука уровня сцены, миксинг и релиз</p>
+      
+      <h4>Длительность:</h4>
+      <p>21–26 часов (14 занятий)</p>
+    `;
+  }
+  
+  modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  
+  // Add event listener for choose button
+  modalChooseBtn.onclick = function() {
+    const tariff = this.getAttribute('data-tariff');
+    closeTariffModal();
+    // Scroll to contact form and select tariff
+    document.getElementById('contact').scrollIntoView({behavior: 'smooth'});
+    setTimeout(() => {
+      const tariffSelect = document.getElementById('tariff');
+      if (tariffSelect) {
+        tariffSelect.value = tariff;
+      }
+    }, 500);
+  };
+}
+
+function closeTariffModal() {
+  const modal = document.getElementById('tariffModal');
+  modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('tariffModal');
+  if (event.target === modal) {
+    closeTariffModal();
+  }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    closeTariffModal();
+  }
+});
+function openTariffModal(tariffType) {
+  const modal = document.getElementById('tariffModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalChooseBtn = document.getElementById('modalChooseBtn');
+  
+  if (tariffType === 'basic') {
+    modalTitle.textContent = 'БАЗОВЫЙ ТАРИФ';
+    modalChooseBtn.setAttribute('data-tariff', 'Базовый');
+    modalBody.innerHTML = `
+      <p><strong>8 уроков × 1,5–2 ч = 12–14 часов</strong></p>
+      <p><strong>Цель:</strong> первый трек в стиле Hard Techno / Schranz с нуля</p>
+      
+      <div class="lesson-block">
+        <h5>1. Основы Ableton Live</h5>
+        <p>Настройка звука и интерфейса<br>
+        Навигация, горячие клавиши<br>
+        Организация рабочего проекта<br>
+        Как строится хард техно трек</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>2. Ритм и грув</h5>
+        <p>Создание кика и хэтов<br>
+        Groove pool, сайдчейн, паттерны 4/4<br>
+        Основы плотного грува</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>3. Бас и низкие частоты</h5>
+        <p>Создание баса в Operator / Wavetable<br>
+        Работа с фильтрами и компрессией<br>
+        Совмещение кика и баса</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>4. Перкуссия и движение</h5>
+        <p>Клэпы, шейкеры, текстуры<br>
+        Лейеринг и микрошейпинг<br>
+        Как "раскачать" ритм</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>5. Аранжировка</h5>
+        <p>Построение формы трека<br>
+        Интро, основной дроп, брейк<br>
+        Динамика и развитие</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>6. Эффекты и финал</h5>
+        <p>Реверб, дилей, дисторшн<br>
+        Финальная обработка<br>
+        Экспорт и прослушивание</p>
+      </div>
+      
+      <h4>Результат:</h4>
+      <p>готовый первый трек и уверенное владение Ableton</p>
+      
+      <h4>Длительность:</h4>
+      <p>12–14 часов (8 занятий)</p>
+    `;
+  } else if (tariffType === 'advanced') {
+    modalTitle.textContent = 'ПРОДВИНУТЫЙ ТАРИФ';
+    modalChooseBtn.setAttribute('data-tariff', 'Продвинутый');
+    modalBody.innerHTML = `
+      <p><strong>14 уроков × 1,5–2 ч = 21–26 часов</strong></p>
+      <p><strong>Цель:</strong> профессиональный трек уровня релиза, освоение продвинутого саунд-дизайна и миксинга</p>
+      
+      <div class="lesson-block">
+        <h5>1. Анализ и цели</h5>
+        <p>Разбор твоих треков<br>
+        Анализ референсов<br>
+        Определение желаемого звучания</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>2. Саунд-дизайн (основа звучания)</h5>
+        <p>Кик-дизайн и ресемплинг<br>
+        Создание движущегося баса<br>
+        Работа с дисторшном и фильтрацией</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>3. Грув и перкуссия</h5>
+        <p>Продвинутая ритмика<br>
+        Слои и микро-шейпы<br>
+        Перкуссионные FX и текстуры</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>4. Лиды и атмосфера</h5>
+        <p>Сложные лиды в Wavetable и Operator<br>
+        Атмосферные пэды и дроны<br>
+        FX, реверсы, саунд-дизайн переходов</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>5. Аранжировка</h5>
+        <p>Построение структуры трека<br>
+        Контроль энергии и внимания<br>
+        Работа с динамикой</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>6. Миксинг</h5>
+        <p>Баланс частот, glue-компрессия<br>
+        Пространство, ширина, reverb/delay<br>
+        Проверка звучания на разных системах</p>
+      </div>
+      
+      <div class="lesson-block">
+        <h5>7. Финал и релиз</h5>
+        <p>Финальный разбор твоего трека<br>
+        Loudness и экспорт<br>
+        Подготовка к релизу (обложки, платформы)<br>
+        План развития и фидбэк</p>
+      </div>
+      
+      <h4>Результат:</h4>
+      <p>готовый профессиональный трек, понимание звука уровня сцены, миксинг и релиз</p>
+      
+      <h4>Длительность:</h4>
+      <p>21–26 часов (14 занятий)</p>
+    `;
+  }
+  
+  modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  
+  // Add event listener for choose button
+  modalChooseBtn.onclick = function() {
+    const tariff = this.getAttribute('data-tariff');
+    closeTariffModal();
+    // Scroll to contact form and select tariff
+    document.getElementById('contact').scrollIntoView({behavior: 'smooth'});
+    setTimeout(() => {
+      const tariffSelect = document.getElementById('tariff');
+      if (tariffSelect) {
+        tariffSelect.value = tariff;
+      }
+    }, 500);
+  };
+}
+
+function closeTariffModal() {
+  const modal = document.getElementById('tariffModal');
+  modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('tariffModal');
+  if (event.target === modal) {
+    closeTariffModal();
+  }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    closeTariffModal();
+  }
+});
+
 
