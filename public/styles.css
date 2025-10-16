@@ -2221,7 +2221,7 @@ Performance mode styles - Complete optimization for low-end devices */
 
 /* Reduce paint operations */
 .timer-value {
-  contain: strict;
+  contain: layout style;
   will-change: contents;
 }
 
