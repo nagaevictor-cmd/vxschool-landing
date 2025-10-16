@@ -87,6 +87,37 @@
 
   <main>
     <section id="pricing" class="pricing">
+      <!-- Discount Banner -->
+      <div class="discount-banner" id="discountBanner" style="display: none;">
+        <div class="discount-content">
+          <div class="discount-text" id="discountText">Скидка 20% на все курсы!</div>
+          <div class="discount-timer" id="discountTimer">
+            <div class="timer-label">До окончания акции:</div>
+            <div class="timer-display">
+              <div class="timer-unit">
+                <span class="timer-value" id="days">00</span>
+                <span class="timer-label-small">дней</span>
+              </div>
+              <div class="timer-separator">:</div>
+              <div class="timer-unit">
+                <span class="timer-value" id="hours">00</span>
+                <span class="timer-label-small">часов</span>
+              </div>
+              <div class="timer-separator">:</div>
+              <div class="timer-unit">
+                <span class="timer-value" id="minutes">00</span>
+                <span class="timer-label-small">минут</span>
+              </div>
+              <div class="timer-separator">:</div>
+              <div class="timer-unit">
+                <span class="timer-value" id="seconds">00</span>
+                <span class="timer-label-small">секунд</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="section-head">
         <h2>ТАРИФЫ</h2>
       </div>
@@ -106,34 +137,36 @@
           <button class="plan-btn choose-plan" data-tariff="Базовый">Выбрать</button>
         </div>
 
-        <div class="pricing-card popular" data-package="group">
+        <div class="pricing-card popular" data-package="advanced">
           <div class="popular-tag">Популярный</div>
-          <h3>Групповой</h3>
+          <h3>Продвинутый</h3>
           <div class="price"><span class="price-amount">30000</span> руб.</div>
           <ul>
             <li>8-10 онлайн-уроков</li>
             <li>Записи занятий</li>
-            <li>Групповой чат</li>
-            <li>Саунд-дизайн</li>
-            <li>Сведение и мастеринг</li>
+            <li>Персональная поддержка</li>
+            <li>Продвинутый саунд-дизайн</li>
+            <li>Профессиональное сведение</li>
+            <li>Подготовка к релизу</li>
             <li>Доступ к материалам навсегда</li>
           </ul>
-          <button class="plan-btn popular-btn choose-plan" data-tariff="Групповой">Выбрать</button>
+          <button class="plan-btn popular-btn choose-plan" data-tariff="Продвинутый">Выбрать</button>
         </div>
 
-        <div class="pricing-card" data-package="individual">
-          <h3>Индивидуальный</h3>
-          <div class="price">По запросу</div>
+        <div class="pricing-card" data-package="paid-consultation">
+          <h3>Платная консультация</h3>
+          <div class="price">По договоренности</div>
           <ul>
-            <li>Всё из группового</li>
-            <li>Личные занятия</li>
-            <li>Чат 24/7</li>
-            <li>Подготовка релиза</li>
-            <li>Помощь с лейблами</li>
-            <li>Доступ к материалам навсегда</li>
+            <li>Персональная встреча 1-на-1</li>
+            <li>Анализ ваших треков</li>
+            <li>Индивидуальный план развития</li>
+            <li>Рекомендации по оборудованию</li>
+            <li>Помощь с техническими вопросами</li>
+            <li>Консультация по карьере в музыке</li>
           </ul>
-          <button class="plan-btn choose-plan" data-tariff="Индивидуальный">Выбрать</button>
+          <button class="plan-btn choose-plan" data-tariff="Платная консультация">Выбрать</button>
         </div>
+
       </div>
 
       <div class="guarantees">
@@ -142,8 +175,8 @@
           <div class="guarantee-item">
             <div class="guarantee-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 11l3 3l8-8"/>
-                <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9s4.03-9 9-9c1.51 0 2.93.37 4.18 1.03"/>
+                <path d="M9 11l3 3l8-8" />
+                <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9s4.03-9 9-9c1.51 0 2.93.37 4.18 1.03" />
               </svg>
             </div>
             <h4>Качественное обучение</h4>
@@ -152,10 +185,10 @@
           <div class="guarantee-item">
             <div class="guarantee-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </div>
             <h4>Поддержка навсегда</h4>
@@ -164,7 +197,7 @@
           <div class="guarantee-item">
             <div class="guarantee-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+                <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" />
               </svg>
             </div>
             <h4>Практический результат</h4>
@@ -312,7 +345,7 @@
               </div>
               <div class="review-author">
                 <div class="author-name">Игорь П.</div>
-                <div class="author-tariff">Тариф "Групповой"</div>
+                <div class="author-tariff">Тариф "Продвинутый"</div>
               </div>
             </article>
           </div>
@@ -551,7 +584,8 @@
             </svg>
           </button>
           <div class="faq-answer">
-            <p>Мы всегда готовы обсудить индивидуальные вопросы и найти подходящее решение. Свяжитесь с нами для консультации.</p>
+            <p>Мы всегда готовы обсудить индивидуальные вопросы и найти подходящее решение. Свяжитесь с нами для
+              консультации.</p>
           </div>
         </div>
       </div>
@@ -581,10 +615,11 @@
             <label for="tariff">ТАРИФ</label>
             <select id="tariff" name="tariff">
               <option value="">Выберите тариф…</option>
-              <option value="Базовый" data-package="basic">Базовый (4 900 ₽/мес)</option>
-              <option value="Групповой" data-package="group">Групповой (9 900 ₽/мес)</option>
-              <option value="Индивидуальный" data-package="individual">Индивидуальный (по запросу)</option>
+              <option value="Базовый" data-package="basic">Базовый (10 000 ₽)</option>
+              <option value="Продвинутый" data-package="advanced">Продвинутый (30 000 ₽)</option>
               <option value="Консультация" data-package="consultation">Бесплатная консультация</option>
+              <option value="Платная консультация" data-package="paid-consultation">Платная консультация (по
+                договоренности)</option>
             </select>
           </div>
           <div class="field">

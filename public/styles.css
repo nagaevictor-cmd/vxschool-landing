@@ -1907,3 +1907,170 @@ section {
 }
 
 
+
+/* Discount Banner with Timer */
+.discount-banner {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 32px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+  animation: pulse-discount 2s ease-in-out infinite;
+}
+
+@keyframes pulse-discount {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+  }
+  50% {
+    box-shadow: 0 12px 40px rgba(255, 107, 53, 0.5);
+  }
+}
+
+.discount-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.discount-text {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.discount-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.timer-label {
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 16px 24px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.timer-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 50px;
+}
+
+.timer-value {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.timer-label-small {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.timer-separator {
+  font-size: 24px;
+  font-weight: 800;
+  opacity: 0.7;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 0.7; }
+  51%, 100% { opacity: 0.3; }
+}
+
+/* Mobile styles for discount banner */
+@media (max-width: 768px) {
+  .discount-banner {
+    padding: 20px 16px;
+    margin-bottom: 24px;
+  }
+  
+  .discount-content {
+    gap: 16px;
+  }
+  
+  .discount-text {
+    font-size: 20px;
+  }
+  
+  .timer-display {
+    padding: 12px 16px;
+    gap: 6px;
+  }
+  
+  .timer-unit {
+    min-width: 40px;
+  }
+  
+  .timer-value {
+    font-size: 24px;
+  }
+  
+  .timer-label-small {
+    font-size: 10px;
+  }
+  
+  .timer-separator {
+    font-size: 20px;
+  }
+}
+
+/* Pricing card updates for new structure */
+.pricing-card[data-package="advanced"] {
+  transform: scale(1.05);
+}
+
+.pricing-card[data-package="advanced"]:hover {
+  transform: scale(1.07) translateY(-2px);
+}
+
+/* Discount prices */
+.price.discounted {
+  position: relative;
+}
+
+.price.discounted .original-price {
+  text-decoration: line-through;
+  opacity: 0.6;
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.price.discounted .discount-price {
+  color: #ff6b35;
+  font-weight: 900;
+}
+
+.discount-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+}

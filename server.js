@@ -73,13 +73,14 @@ if (!fs.existsSync(settingsFile)) {
     discountEnabled: false,
     discountPercent: 20,
     discountText: 'Скидка 20% на все курсы!',
+    discountEndDate: null,
     basicAvailable: true,
-    groupAvailable: true,
-    individualAvailable: true,
+    advancedAvailable: true,
     consultationAvailable: true,
+    paidConsultationAvailable: true,
     basicPrice: 10000,
-    groupPrice: 30000,
-    individualPrice: 'По запросу',
+    advancedPrice: 30000,
+    paidConsultationPrice: 'По договоренности',
     contactTelegram: '@vxschool',
     contactEmail: 'contact@vxschool.com'
   };
@@ -557,13 +558,14 @@ app.get('/api/settings', (req, res) => {
       discountEnabled: settings.discountEnabled,
       discountPercent: settings.discountPercent,
       discountText: settings.discountText,
+      discountEndDate: settings.discountEndDate,
       basicAvailable: settings.basicAvailable,
-      groupAvailable: settings.groupAvailable,
-      individualAvailable: settings.individualAvailable,
+      advancedAvailable: settings.advancedAvailable,
       consultationAvailable: settings.consultationAvailable,
+      paidConsultationAvailable: settings.paidConsultationAvailable,
       basicPrice: settings.basicPrice,
-      groupPrice: settings.groupPrice,
-      individualPrice: settings.individualPrice
+      advancedPrice: settings.advancedPrice,
+      paidConsultationPrice: settings.paidConsultationPrice
     };
 
     res.json(publicSettings);
@@ -625,7 +627,7 @@ app.post('/contact', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Сообщение слишком длинное. Максимум 1000 символов.' });
   }
 
-  const validTariffs = ['Базовый', 'Групповой', 'Индивидуальный', 'Консультация'];
+  const validTariffs = ['Базовый', 'Продвинутый', 'Консультация', 'Платная консультация'];
   if (sanitizedTariff && !validTariffs.includes(sanitizedTariff)) {
     return res.status(400).json({ ok: false, error: 'Выберите корректный тариф из списка.' });
   }

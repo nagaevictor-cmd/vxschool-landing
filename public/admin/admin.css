@@ -600,4 +600,76 @@ ts Section Enhancements */
     .contacts-actions {
         flex-direction: column;
     }
+}/* T
+imer setting styles */
+.timer-setting {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timer-setting label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.timer-setting input[type="datetime-local"] {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.timer-setting input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.timer-setting small {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    font-style: italic;
+}
+
+/* Enhanced setting details */
+.setting-details {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.setting-details input {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: var(--text);
+}
+
+.setting-details input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .timer-setting {
+        padding: 10px;
+    }
+    
+    .timer-setting input[type="datetime-local"] {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
 }

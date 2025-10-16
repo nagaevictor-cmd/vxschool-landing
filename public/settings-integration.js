@@ -42,6 +42,11 @@ class SettingsIntegration {
         if (this.settings.discountEnabled && this.settings.discountText) {
             this.showDiscountBanner();
             this.updatePricesWithDiscount();
+            
+            // Start timer if end date is set
+            if (this.settings.discountEndDate) {
+                this.startDiscountTimer();
+            }
         }
     }
 
@@ -69,10 +74,10 @@ class SettingsIntegration {
                 
                 if (packageType === 'basic') {
                     originalPrice = this.settings.basicPrice || 10000;
-                } else if (packageType === 'group') {
-                    originalPrice = this.settings.groupPrice || 30000;
-                } else if (packageType === 'individual') {
-                    originalPrice = this.settings.individualPrice || 'По запросу';
+                } else if (packageType === 'advanced') {
+                    originalPrice = this.settings.advancedPrice || 30000;
+                } else if (packageType === 'paid-consultation') {
+                    originalPrice = this.settings.paidConsultationPrice || 'По договоренности';
                 }
                 
                 if (originalPrice === 'По запросу') {
@@ -90,129 +95,101 @@ class SettingsIntegration {
     }
 
     showDiscountBanner() {
-        // Create discount banner
+        // Create discount banner with timer
         const banner = document.createElement('div');
         banner.className = 'discount-banner';
+        banner.id = 'discountBanner';
+        
+        let timerHTML = '';
+        if (this.settings.discountEndDate) {
+            timerHTML = `
+                <div class="discount-timer" id="discountTimer">
+                    <div class="timer-label">До окончания акции:</div>
+                    <div class="timer-display">
+                        <div class="timer-unit">
+                            <span class="timer-value" id="days">00</span>
+                            <span class="timer-label-small">дней</span>
+                        </div>
+                        <div class="timer-separator">:</div>
+                        <div class="timer-unit">
+                            <span class="timer-value" id="hours">00</span>
+                            <span class="timer-label-small">часов</span>
+                        </div>
+                        <div class="timer-separator">:</div>
+                        <div class="timer-unit">
+                            <span class="timer-value" id="minutes">00</span>
+                            <span class="timer-label-small">минут</span>
+                        </div>
+                        <div class="timer-separator">:</div>
+                        <div class="timer-unit">
+                            <span class="timer-value" id="seconds">00</span>
+                            <span class="timer-label-small">секунд</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
         banner.innerHTML = `
             <div class="discount-content">
-                <div class="discount-info">
-                    <span class="discount-icon">✨</span>
-                    <span class="discount-text">${this.settings.discountText}</span>
-                </div>
-                <button class="discount-close" onclick="this.parentElement.parentElement.remove()" aria-label="Закрыть">×</button>
+                <div class="discount-text" id="discountText">${this.settings.discountText}</div>
+                ${timerHTML}
             </div>
         `;
 
-        // Add banner styles
+        // Add banner styles (updated for new structure without emoji)
         const styles = `
             <style>
             .discount-banner {
                 background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
                 color: white;
-                padding: 18px 0;
+                padding: 24px;
                 text-align: center;
                 font-weight: 600;
-                margin: 25px auto;
-                border-radius: 15px;
-                box-shadow: 0 6px 25px rgba(255, 107, 53, 0.25);
+                margin: 32px auto;
+                border-radius: 16px;
+                box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
                 max-width: 1200px;
                 position: relative;
                 overflow: hidden;
+                animation: pulse-discount 2s ease-in-out infinite;
             }
             
-            .discount-banner::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-                animation: shine 4s infinite;
+            @keyframes pulse-discount {
+                0%, 100% {
+                    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+                }
+                50% {
+                    box-shadow: 0 12px 40px rgba(255, 107, 53, 0.5);
+                }
             }
             
             .discount-content {
                 display: flex;
+                flex-direction: column;
                 align-items: center;
-                justify-content: space-between;
-                padding: 0 30px;
-                position: relative;
-                z-index: 2;
-            }
-            
-            .discount-info {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                flex: 1;
-                justify-content: center;
-            }
-            
-            .discount-icon {
-                font-size: 1.5em;
-                animation: gentle-pulse 3s ease-in-out infinite;
+                gap: 20px;
             }
             
             .discount-text {
-                font-size: 1.2em;
-                letter-spacing: 0.3px;
-                font-weight: 600;
-            }
-            
-            .discount-close {
-                background: rgba(255, 255, 255, 0.15);
-                border: none;
-                color: white;
-                font-size: 1.3em;
-                cursor: pointer;
-                padding: 8px 12px;
-                border-radius: 50%;
-                transition: all 0.2s ease;
-                width: 40px;
-                height: 40px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .discount-close:hover {
-                background: rgba(255, 255, 255, 0.25);
-                transform: rotate(90deg);
-            }
-            
-            @keyframes shine {
-                0% { left: -100%; }
-                100% { left: 100%; }
-            }
-            
-            @keyframes gentle-pulse {
-                0%, 100% { transform: scale(1); opacity: 1; }
-                50% { transform: scale(1.05); opacity: 0.9; }
+                font-size: 24px;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             }
             
             @media (max-width: 768px) {
                 .discount-banner {
-                    margin: 20px 15px;
-                    border-radius: 12px;
-                    padding: 16px 0;
+                    padding: 20px 16px;
+                    margin: 24px auto;
                 }
                 
                 .discount-content {
-                    padding: 0 20px;
+                    gap: 16px;
                 }
                 
                 .discount-text {
-                    font-size: 1.1em;
-                }
-                
-                .discount-icon {
-                    font-size: 1.3em;
-                }
-                
-                .discount-close {
-                    width: 36px;
-                    height: 36px;
-                    font-size: 1.2em;
+                    font-size: 20px;
                 }
             }
             </style>
@@ -342,9 +319,9 @@ class SettingsIntegration {
     applyPackageAvailability() {
         const packages = {
             'basic': this.settings.basicAvailable,
-            'group': this.settings.groupAvailable,
-            'individual': this.settings.individualAvailable,
-            'consultation': this.settings.consultationAvailable
+            'advanced': this.settings.advancedAvailable,
+            'consultation': this.settings.consultationAvailable,
+            'paid-consultation': this.settings.paidConsultationAvailable
         };
 
         Object.entries(packages).forEach(([packageName, isAvailable]) => {
@@ -497,18 +474,13 @@ class SettingsIntegration {
                 }
             }
 
-            // Check group price
-            if (this.settings.groupAvailable !== false && this.settings.groupPrice) {
-                const groupPrice = parseInt(this.settings.groupPrice);
-                if (minPrice === null || groupPrice < minPrice) {
-                    minPrice = groupPrice;
-                    minPriceText = `от ${groupPrice.toLocaleString('ru-RU')} ₽`;
+            // Check advanced price
+            if (this.settings.advancedAvailable !== false && this.settings.advancedPrice) {
+                const advancedPrice = parseInt(this.settings.advancedPrice);
+                if (minPrice === null || advancedPrice < minPrice) {
+                    minPrice = advancedPrice;
+                    minPriceText = `от ${advancedPrice.toLocaleString('ru-RU')} ₽`;
                 }
-            }
-
-            // If individual is available and others aren't, show "По запросу"
-            if (this.settings.individualAvailable !== false && minPrice === null) {
-                minPriceText = 'По запросу';
             }
 
             // Apply discount if enabled
@@ -554,9 +526,74 @@ class SettingsIntegration {
             existingBanner.remove();
         }
 
+        // Clear timer if running
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+
         // Reload settings and reapply
         await this.loadSettings();
         this.applySettings();
+    }
+
+    // Discount timer methods
+    startDiscountTimer() {
+        if (!this.settings.discountEndDate) return;
+
+        const endDate = new Date(this.settings.discountEndDate);
+        
+        // Update timer immediately
+        this.updateTimer(endDate);
+        
+        // Update every second
+        this.timerInterval = setInterval(() => {
+            this.updateTimer(endDate);
+        }, 1000);
+    }
+
+    updateTimer(endDate) {
+        const now = new Date().getTime();
+        const distance = endDate.getTime() - now;
+
+        if (distance < 0) {
+            // Timer expired
+            this.onTimerExpired();
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // Update display
+        const daysEl = document.getElementById('days');
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+
+        if (daysEl) daysEl.textContent = days.toString().padStart(2, '0');
+        if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
+        if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
+        if (secondsEl) secondsEl.textContent = seconds.toString().padStart(2, '0');
+    }
+
+    onTimerExpired() {
+        // Clear interval
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+
+        // Hide discount banner
+        const banner = document.getElementById('discountBanner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+
+        // Reset prices to original
+        this.resetToCleanState();
+        this.applyPriceSettings();
+        this.applyPackageAvailability();
     }
 }
 

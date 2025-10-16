@@ -372,17 +372,26 @@ class AdminPanel {
         document.getElementById('discountEnabled').checked = settings.discountEnabled || false;
         document.getElementById('discountPercent').value = settings.discountPercent || '';
         document.getElementById('discountText').value = settings.discountText || '';
+        
+        // Discount end date
+        if (settings.discountEndDate) {
+            const date = new Date(settings.discountEndDate);
+            const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('discountEndDate').value = localDateTime;
+        } else {
+            document.getElementById('discountEndDate').value = '';
+        }
 
         // Package availability
         document.getElementById('basicAvailable').checked = settings.basicAvailable !== false;
-        document.getElementById('groupAvailable').checked = settings.groupAvailable !== false;
-        document.getElementById('individualAvailable').checked = settings.individualAvailable !== false;
+        document.getElementById('advancedAvailable').checked = settings.advancedAvailable !== false;
         document.getElementById('consultationAvailable').checked = settings.consultationAvailable !== false;
+        document.getElementById('paidConsultationAvailable').checked = settings.paidConsultationAvailable !== false;
 
         // Prices
         document.getElementById('basicPrice').value = settings.basicPrice || 10000;
-        document.getElementById('groupPrice').value = settings.groupPrice || 30000;
-        document.getElementById('individualPrice').value = settings.individualPrice || 'По запросу';
+        document.getElementById('advancedPrice').value = settings.advancedPrice || 30000;
+        document.getElementById('paidConsultationPrice').value = settings.paidConsultationPrice || 'По договоренности';
 
         // Contact info
         document.getElementById('contactTelegram').value = settings.contactTelegram || '';
@@ -390,17 +399,25 @@ class AdminPanel {
     }
 
     async saveSettings() {
+        // Get discount end date
+        const discountEndDateValue = document.getElementById('discountEndDate').value;
+        let discountEndDate = null;
+        if (discountEndDateValue) {
+            discountEndDate = new Date(discountEndDateValue).toISOString();
+        }
+
         const settings = {
             discountEnabled: document.getElementById('discountEnabled').checked,
             discountPercent: parseInt(document.getElementById('discountPercent').value) || 0,
             discountText: document.getElementById('discountText').value,
+            discountEndDate: discountEndDate,
             basicAvailable: document.getElementById('basicAvailable').checked,
-            groupAvailable: document.getElementById('groupAvailable').checked,
-            individualAvailable: document.getElementById('individualAvailable').checked,
+            advancedAvailable: document.getElementById('advancedAvailable').checked,
             consultationAvailable: document.getElementById('consultationAvailable').checked,
+            paidConsultationAvailable: document.getElementById('paidConsultationAvailable').checked,
             basicPrice: parseInt(document.getElementById('basicPrice').value) || 10000,
-            groupPrice: parseInt(document.getElementById('groupPrice').value) || 30000,
-            individualPrice: document.getElementById('individualPrice').value || 'По запросу',
+            advancedPrice: parseInt(document.getElementById('advancedPrice').value) || 30000,
+            paidConsultationPrice: document.getElementById('paidConsultationPrice').value || 'По договоренности',
             contactTelegram: document.getElementById('contactTelegram').value,
             contactEmail: document.getElementById('contactEmail').value
         };

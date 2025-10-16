@@ -157,6 +157,11 @@
                         <div class="setting-details">
                             <input type="number" id="discountPercent" placeholder="Размер скидки %" min="1" max="90">
                             <input type="text" id="discountText" placeholder="Текст акции">
+                            <div class="timer-setting">
+                                <label>Окончание акции:</label>
+                                <input type="datetime-local" id="discountEndDate" title="Оставьте пустым для бессрочной акции">
+                                <small>Оставьте пустым для бессрочной акции</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -167,13 +172,13 @@
                         <label><input type="checkbox" id="basicAvailable" checked> Базовый тариф</label>
                     </div>
                     <div class="setting-item">
-                        <label><input type="checkbox" id="groupAvailable" checked> Групповой тариф</label>
+                        <label><input type="checkbox" id="advancedAvailable" checked> Продвинутый тариф</label>
                     </div>
                     <div class="setting-item">
-                        <label><input type="checkbox" id="individualAvailable" checked> Индивидуальный тариф</label>
+                        <label><input type="checkbox" id="consultationAvailable" checked> Бесплатная консультация</label>
                     </div>
                     <div class="setting-item">
-                        <label><input type="checkbox" id="consultationAvailable" checked> Консультация</label>
+                        <label><input type="checkbox" id="paidConsultationAvailable" checked> Платная консультация</label>
                     </div>
                 </div>
 
@@ -184,12 +189,12 @@
                         <input type="number" id="basicPrice" placeholder="10000" min="0">
                     </div>
                     <div class="setting-item">
-                        <label>Групповой тариф (руб.):</label>
-                        <input type="number" id="groupPrice" placeholder="30000" min="0">
+                        <label>Продвинутый тариф (руб.):</label>
+                        <input type="number" id="advancedPrice" placeholder="30000" min="0">
                     </div>
                     <div class="setting-item">
-                        <label>Индивидуальный тариф:</label>
-                        <input type="text" id="individualPrice" placeholder="По запросу">
+                        <label>Платная консультация:</label>
+                        <input type="text" id="paidConsultationPrice" placeholder="По договоренности">
                     </div>
                 </div>
 

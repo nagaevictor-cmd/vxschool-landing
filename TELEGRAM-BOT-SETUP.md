@@ -13,7 +13,7 @@
 ### 1. Установите webhook для вашего бота:
 
 ```bash
-curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+curl -X POST "https://api.telegram.org/bot7813770954:AAEfWfVmagJ7cT7H75joxgIh08IEU6RnA0A/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://vxschool.ru/webhook/telegram"}'
 ```
@@ -23,7 +23,7 @@ curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
 ### 2. Проверьте webhook:
 
 ```bash
-curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
+curl "https://api.telegram.org/bot7813770954:AAEfWfVmagJ7cT7H75joxgIh08IEU6RnA0A/getWebhookInfo"
 ```
 
 ## Функции бота:
