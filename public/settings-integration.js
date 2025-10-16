@@ -149,28 +149,28 @@ class SettingsIntegration {
         const styles = `
             <style>
             .discount-banner {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, rgba(18, 20, 26, 0.95) 0%, rgba(15, 18, 24, 0.98) 100%);
                 color: white;
                 padding: 24px;
                 text-align: center;
                 font-weight: 600;
                 margin: 32px auto;
                 border-radius: 20px;
-                box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
                 max-width: 1200px;
                 position: relative;
                 overflow: hidden;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                backdrop-filter: blur(10px);
-                animation: gentle-glow 3s ease-in-out infinite;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(20px);
+                animation: gentle-glow 4s ease-in-out infinite;
             }
             
             @keyframes gentle-glow {
                 0%, 100% {
-                    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
                 }
                 50% {
-                    box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
+                    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2);
                 }
             }
             
@@ -203,9 +203,10 @@ class SettingsIntegration {
             }
             
             .discount-close:hover {
-                background: rgba(255, 255, 255, 0.3);
+                background: rgba(255, 255, 255, 0.25);
                 transform: scale(1.1);
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                border-color: rgba(255, 255, 255, 0.4);
             }
             
             .discount-text {
@@ -234,11 +235,12 @@ class SettingsIntegration {
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                background: rgba(255, 255, 255, 0.15);
+                background: rgba(255, 255, 255, 0.08);
                 padding: 16px 24px;
                 border-radius: 15px;
                 backdrop-filter: blur(15px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
             }
             
             .timer-unit {
