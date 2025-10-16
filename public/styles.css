@@ -57,10 +57,6 @@ body {
   object-fit: cover;
   z-index: -1;
   filter: brightness(0.35) saturate(1.05);
-  /* Mobile autoplay optimization */
-  -webkit-playsinline: true;
-  -moz-playsinline: true;
-  playsinline: true;
 }
 
 @media (max-width: 640px) {
@@ -1924,10 +1920,10 @@ section {
 
 @keyframes gentle-glow {
   0%, 100% {
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    transform: translateZ(0) scale(1);
   }
   50% {
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    transform: translateZ(0) scale(1.01);
   }
 }
 
@@ -2075,4 +2071,213 @@ section {
   font-size: 12px;
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+}/* 
+Performance optimizations for smooth scrolling */
+.discount-banner,
+.discount-content,
+.timer-display,
+.timer-unit {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Reduce motion for better performance on low-end devices */
+@media (prefers-reduced-motion: reduce) {
+  .discount-banner {
+    animation: none !important;
+  }
+  
+  .timer-separator {
+    animation: none !important;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* GPU acceleration for smooth animations */
+.pricing-card,
+.result-item,
+.hero-cta-btn {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimize backdrop-filter usage */
+@supports not (backdrop-filter: blur(10px)) {
+  .discount-banner {
+    background: rgba(18, 20, 26, 0.98);
+  }
+  
+  .timer-display {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* Optimize video performance */
+#bg-video {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Reduce repaints during scroll */
+.hero-nav.sticky {
+  will-change: transform;
+  transform: translateX(-50%) translateZ(0);
+}
+
+/* Optimize mobile performance */
+@media (max-width: 768px) {
+  /* Reduce blur effects on mobile for better performance */
+  .discount-banner {
+    backdrop-filter: blur(5px);
+  }
+  
+  .timer-display {
+    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  /* Optimize mobile animations */
+  .discount-banner {
+    animation-duration: 6s; /* Slower animation on mobile */
+  }
+}
+
+/* Optimize for older devices */
+@media (max-width: 480px) {
+  .discount-banner {
+    backdrop-filter: none;
+    background: rgba(18, 20, 26, 0.98);
+    animation: none; /* No animation on very small screens */
+  }
+}/* 
+Performance mode styles - Complete optimization for low-end devices */
+.performance-mode .discount-banner {
+  animation: none !important;
+  backdrop-filter: none !important;
+  background: rgba(18, 20, 26, 0.98) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.performance-mode .timer-separator {
+  animation: none !important;
+}
+
+.performance-mode * {
+  animation: none !important;
+  transition: none !important;
+  backdrop-filter: none !important;
+}
+
+.performance-mode .pricing-card:hover {
+  transform: none !important;
+}
+
+.performance-mode .hero-cta-btn:hover {
+  transform: none !important;
+}
+
+.performance-mode .result-item:hover {
+  transform: none !important;
+}
+
+/* Low performance device optimizations */
+.low-performance .discount-banner {
+  backdrop-filter: none;
+  animation: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.low-performance .timer-display {
+  backdrop-filter: none;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.low-performance .pricing-card {
+  backdrop-filter: none;
+}
+
+/* Mobile optimizations */
+.mobile-optimized .discount-banner {
+  backdrop-filter: blur(5px);
+}
+
+.mobile-optimized .timer-display {
+  backdrop-filter: none;
+}
+
+/* Optimize scroll performance */
+.discount-banner {
+  contain: layout style paint;
+}
+
+.timer-display {
+  contain: layout style;
+}
+
+/* Reduce paint operations */
+.timer-value {
+  contain: strict;
+  will-change: contents;
+}
+
+/* Additional performance optimizations */
+.pricing-cards {
+  contain: layout;
+}
+
+.results-grid {
+  contain: layout;
+}
+
+.hero-content {
+  contain: layout style;
+}
+
+/* Optimize font rendering */
+* {
+  text-rendering: optimizeSpeed;
+}
+
+h1, h2, h3, .pricing-title, .discount-text {
+  text-rendering: optimizeLegibility;
+}
+
+/* Optimize image rendering */
+img, video {
+  image-rendering: optimizeSpeed;
+}
+
+/* Critical performance fixes for smooth scrolling */
+body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Prevent layout shifts */
+.discount-banner {
+  min-height: 120px;
+}
+
+@media (max-width: 768px) {
+  .discount-banner {
+    min-height: 140px;
+  }
+}
+
+/* Optimize transform operations */
+.pricing-card,
+.result-item,
+.hero-cta-btn {
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Memory optimization */
+.timer-unit {
+  transform-style: preserve-3d;
 }

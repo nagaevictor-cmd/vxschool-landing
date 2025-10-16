@@ -142,3 +142,14 @@ TELEGRAM_CHAT_ID=real_chat_id
 4. Убедитесь в доступности медиафайлов
 
 
+тот репозиторий предназначен только для продакшн деплоя.
+
+---
+
+**🔗 Связанные репозитории:**
+- [Development Repository](https://github.com/viktornagaev/vxschool-project) - Основная разработка
+- [Production Repository](https://github.com/yourusername/vxschool-production) - Этот репозиторий
+
+**📞 Контакты:**
+- Email: info@vxschool.ru
+- Telegram: @vxschool_support

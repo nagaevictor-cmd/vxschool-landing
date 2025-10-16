@@ -41,13 +41,16 @@ class SettingsIntegration {
 
     applyDiscountSettings() {
         if (this.settings.discountEnabled && this.settings.discountText) {
-            this.showDiscountBanner();
-            this.updatePricesWithDiscount();
-            
-            // Start timer if end date is set
-            if (this.settings.discountEndDate) {
-                this.startDiscountTimer();
-            }
+            // Use requestAnimationFrame for smooth rendering
+            requestAnimationFrame(() => {
+                this.showDiscountBanner();
+                this.updatePricesWithDiscount();
+                
+                // Start timer if end date is set
+                if (this.settings.discountEndDate) {
+                    this.startDiscountTimer();
+                }
+            });
         }
     }
 
@@ -156,21 +159,21 @@ class SettingsIntegration {
                 font-weight: 600;
                 margin: 32px auto;
                 border-radius: 20px;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
                 max-width: 1200px;
                 position: relative;
                 overflow: hidden;
                 border: 1px solid rgba(255, 255, 255, 0.15);
-                backdrop-filter: blur(20px);
-                animation: gentle-glow 4s ease-in-out infinite;
+                will-change: transform;
+                transform: translateZ(0);
             }
             
             @keyframes gentle-glow {
                 0%, 100% {
-                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+                    transform: translateZ(0) scale(1);
                 }
                 50% {
-                    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2);
+                    transform: translateZ(0) scale(1.01);
                 }
             }
             
@@ -238,9 +241,9 @@ class SettingsIntegration {
                 background: rgba(255, 255, 255, 0.08);
                 padding: 16px 24px;
                 border-radius: 15px;
-                backdrop-filter: blur(15px);
                 border: 1px solid rgba(255, 255, 255, 0.12);
-                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                will-change: transform;
+                transform: translateZ(0);
             }
             
             .timer-unit {
@@ -705,9 +708,11 @@ class SettingsIntegration {
         // Update timer immediately
         this.updateTimer(endDate);
         
-        // Update every second
+        // Update every second, but use requestAnimationFrame for better performance
         this.timerInterval = setInterval(() => {
-            this.updateTimer(endDate);
+            requestAnimationFrame(() => {
+                this.updateTimer(endDate);
+            });
         }, 1000);
     }
 
