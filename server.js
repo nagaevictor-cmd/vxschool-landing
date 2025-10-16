@@ -627,7 +627,7 @@ app.post('/contact', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Сообщение слишком длинное. Максимум 1000 символов.' });
   }
 
-  const validTariffs = ['Базовый', 'Продвинутый', 'Консультация', 'Платная консультация'];
+  const validTariffs = ['Базовый', 'Продвинутый', 'Платная консультация'];
   if (sanitizedTariff && !validTariffs.includes(sanitizedTariff)) {
     return res.status(400).json({ ok: false, error: 'Выберите корректный тариф из списка.' });
   }

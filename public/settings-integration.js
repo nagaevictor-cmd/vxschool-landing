@@ -96,6 +96,12 @@ class SettingsIntegration {
     }
 
     showDiscountBanner() {
+        // Check if user has closed the banner
+        const bannerClosed = localStorage.getItem('discountBannerClosed');
+        if (bannerClosed === 'true') {
+            return; // Don't show banner if user closed it
+        }
+
         // Create discount banner with timer
         const banner = document.createElement('div');
         banner.className = 'discount-banner';
@@ -133,35 +139,38 @@ class SettingsIntegration {
         
         banner.innerHTML = `
             <div class="discount-content">
+                <button class="discount-close" onclick="window.settingsIntegration.closeBanner()" aria-label="Закрыть">×</button>
                 <div class="discount-text" id="discountText">${this.settings.discountText}</div>
                 ${timerHTML}
             </div>
         `;
 
-        // Add banner styles (updated for new structure without emoji)
+        // Add banner styles (improved design with close button)
         const styles = `
             <style>
             .discount-banner {
-                background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
                 padding: 24px;
                 text-align: center;
                 font-weight: 600;
                 margin: 32px auto;
-                border-radius: 16px;
-                box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+                border-radius: 20px;
+                box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
                 max-width: 1200px;
                 position: relative;
                 overflow: hidden;
-                animation: pulse-discount 2s ease-in-out infinite;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                animation: gentle-glow 3s ease-in-out infinite;
             }
             
-            @keyframes pulse-discount {
+            @keyframes gentle-glow {
                 0%, 100% {
-                    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+                    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
                 }
                 50% {
-                    box-shadow: 0 12px 40px rgba(255, 107, 53, 0.5);
+                    box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
                 }
             }
             
@@ -170,26 +179,174 @@ class SettingsIntegration {
                 flex-direction: column;
                 align-items: center;
                 gap: 20px;
+                position: relative;
+            }
+            
+            .discount-close {
+                position: absolute;
+                top: -12px;
+                right: -12px;
+                width: 32px;
+                height: 32px;
+                background: rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            }
+            
+            .discount-close:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: scale(1.1);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             }
             
             .discount-text {
                 font-size: 24px;
                 font-weight: 800;
                 letter-spacing: 0.08em;
-                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                margin: 0;
+            }
+            
+            .discount-timer {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+            }
+            
+            .timer-label {
+                font-size: 16px;
+                font-weight: 600;
+                opacity: 0.9;
+                margin: 0;
+            }
+            
+            .timer-display {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                background: rgba(255, 255, 255, 0.15);
+                padding: 16px 24px;
+                border-radius: 15px;
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .timer-unit {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-width: 50px;
+            }
+            
+            .timer-value {
+                font-size: 28px;
+                font-weight: 800;
+                line-height: 1;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            
+            .timer-label-small {
+                font-size: 12px;
+                font-weight: 600;
+                opacity: 0.8;
+                margin-top: 4px;
+            }
+            
+            .timer-separator {
+                font-size: 24px;
+                font-weight: 800;
+                opacity: 0.7;
+                animation: blink 1.5s ease-in-out infinite;
+            }
+            
+            @keyframes blink {
+                0%, 50% { opacity: 0.7; }
+                51%, 100% { opacity: 0.3; }
             }
             
             @media (max-width: 768px) {
                 .discount-banner {
                     padding: 20px 16px;
-                    margin: 24px auto;
+                    margin: 20px 16px;
+                    border-radius: 16px;
                 }
                 
                 .discount-content {
                     gap: 16px;
                 }
                 
+                .discount-close {
+                    top: -8px;
+                    right: -8px;
+                    width: 28px;
+                    height: 28px;
+                    font-size: 16px;
+                }
+                
                 .discount-text {
+                    font-size: 18px;
+                    line-height: 1.3;
+                }
+                
+                .timer-display {
+                    padding: 12px 16px;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                }
+                
+                .timer-unit {
+                    min-width: 40px;
+                }
+                
+                .timer-value {
+                    font-size: 22px;
+                }
+                
+                .timer-label-small {
+                    font-size: 10px;
+                }
+                
+                .timer-separator {
+                    font-size: 18px;
+                    display: none; /* Hide separators on mobile for cleaner look */
+                }
+                
+                .timer-label {
+                    font-size: 14px;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .discount-banner {
+                    margin: 16px 12px;
+                    padding: 16px 12px;
+                }
+                
+                .discount-text {
+                    font-size: 16px;
+                }
+                
+                .timer-display {
+                    padding: 10px 12px;
+                    gap: 6px;
+                }
+                
+                .timer-unit {
+                    min-width: 35px;
+                }
+                
+                .timer-value {
                     font-size: 20px;
                 }
             }
@@ -595,6 +752,27 @@ class SettingsIntegration {
         this.resetToCleanState();
         this.applyPriceSettings();
         this.applyPackageAvailability();
+    }
+
+    // Method to close banner and remember user's choice
+    closeBanner() {
+        const banner = document.getElementById('discountBanner');
+        if (banner) {
+            banner.remove();
+        }
+        
+        // Remember that user closed the banner
+        localStorage.setItem('discountBannerClosed', 'true');
+        
+        // Clear timer if running
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+    }
+
+    // Method to reset banner state (for admin use)
+    resetBannerState() {
+        localStorage.removeItem('discountBannerClosed');
     }
 }
 

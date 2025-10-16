@@ -1910,22 +1910,24 @@ section {
 
 /* Discount Banner with Timer */
 .discount-banner {
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  border-radius: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
   padding: 24px;
   margin-bottom: 32px;
   text-align: center;
   color: #fff;
-  box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
-  animation: pulse-discount 2s ease-in-out infinite;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  animation: gentle-glow 3s ease-in-out infinite;
 }
 
-@keyframes pulse-discount {
+@keyframes gentle-glow {
   0%, 100% {
-    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
   }
   50% {
-    box-shadow: 0 12px 40px rgba(255, 107, 53, 0.5);
+    box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
   }
 }
 
