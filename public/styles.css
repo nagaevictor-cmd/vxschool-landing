@@ -506,7 +506,7 @@ body {
 }
 
 .result-item {
-  padding: 16px 24px 16px 40px;
+  padding: 16px 24px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
@@ -518,17 +518,7 @@ body {
   transition: all 0.3s ease;
 }
 
-.result-item::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 6px;
-  height: 6px;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  border-radius: 50%;
-}
+/* Removed orange dots */
 
 .result-item:hover {
   background: rgba(255, 255, 255, 0.08);
