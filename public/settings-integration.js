@@ -17,6 +17,7 @@ class SettingsIntegration {
             const response = await fetch('/api/settings');
             if (response.ok) {
                 this.settings = await response.json();
+                console.log('Settings loaded:', this.settings); // Debug info
             } else {
                 console.error('Failed to load settings, response:', response.status);
             }
@@ -73,16 +74,16 @@ class SettingsIntegration {
                 let originalPrice;
                 
                 if (packageType === 'basic') {
-                    originalPrice = this.settings.basicPrice || 10000;
+                    originalPrice = (this.settings && this.settings.basicPrice) || 10000;
                 } else if (packageType === 'advanced') {
-                    originalPrice = this.settings.advancedPrice || 30000;
+                    originalPrice = (this.settings && this.settings.advancedPrice) || 30000;
                 } else if (packageType === 'paid-consultation') {
-                    originalPrice = this.settings.paidConsultationPrice || 'По договоренности';
+                    originalPrice = (this.settings && this.settings.paidConsultationPrice) || 'По договоренности';
                 }
                 
-                if (originalPrice === 'По запросу') {
+                if (originalPrice === 'По запросу' || originalPrice === 'По договоренности') {
                     priceDiv.innerHTML = originalPrice;
-                } else {
+                } else if (originalPrice && !isNaN(originalPrice)) {
                     priceDiv.innerHTML = `<span class="price-amount">${originalPrice}</span> руб.`;
                 }
             }
