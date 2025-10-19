@@ -1067,7 +1067,7 @@ section {
 .faq-answer p {
   padding: 0 24px 20px;
   margin: 0;
-  color: var(--muted);
+  color: #e5e7eb;
   line-height: 1.5;
 }
 
@@ -1079,7 +1079,7 @@ section {
 
 .contact-intro p {
   font-size: 18px;
-  color: var(--muted);
+  color: #e5e7eb;
   margin: 0;
 }
 
@@ -2242,7 +2242,7 @@ section {
   top: -8px;
   right: -8px;
   background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
-  color: #fff;
+  color: #000000;
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 12px;

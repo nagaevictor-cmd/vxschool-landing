@@ -443,9 +443,9 @@ class SettingsIntegration {
                 top: -6px;
                 right: -6px;
                 background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
-                color: white;
+                color: #000;
                 font-size: 10px;
-                font-weight: 600;
+                font-weight: 700;
                 padding: 4px 8px;
                 border-radius: 12px;
                 box-shadow: 0 2px 8px rgba(100, 181, 246, 0.3);
