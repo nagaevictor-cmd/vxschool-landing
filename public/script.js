@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
           document.addEventListener('touchstart', () => {
             video.play().catch(e => console.log('Video play failed:', e));
           }, { once: true });
-          
+
           document.addEventListener('click', () => {
             video.play().catch(e => console.log('Video play failed:', e));
           }, { once: true });
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Also try when video metadata is loaded
       video.addEventListener('loadedmetadata', playVideo);
-      
+
       // Ensure video is muted (required for autoplay)
       video.muted = true;
       video.defaultMuted = true;
@@ -606,7 +606,7 @@ function openTariffModal(tariffType) {
   const modalTitle = document.getElementById('modalTitle');
   const modalBody = document.getElementById('modalBody');
   const modalChooseBtn = document.getElementById('modalChooseBtn');
-  
+
   if (tariffType === 'basic') {
     modalTitle.textContent = 'БАЗОВЫЙ ТАРИФ';
     modalChooseBtn.setAttribute('data-tariff', 'Базовый');
@@ -727,16 +727,16 @@ function openTariffModal(tariffType) {
       <p>21–26 часов (14 занятий)</p>
     `;
   }
-  
+
   modal.style.display = 'block';
   document.body.style.overflow = 'hidden';
-  
+
   // Add event listener for choose button
-  modalChooseBtn.onclick = function() {
+  modalChooseBtn.onclick = function () {
     const tariff = this.getAttribute('data-tariff');
     closeTariffModal();
     // Scroll to contact form and select tariff
-    document.getElementById('contact').scrollIntoView({behavior: 'smooth'});
+    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
     setTimeout(() => {
       const tariffSelect = document.getElementById('tariff');
       if (tariffSelect) {
@@ -753,7 +753,7 @@ function closeTariffModal() {
 }
 
 // Close modal when clicking outside
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
   const modal = document.getElementById('tariffModal');
   if (event.target === modal) {
     closeTariffModal();
@@ -761,7 +761,7 @@ document.addEventListener('click', function(event) {
 });
 
 // Close modal with Escape key
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function (event) {
   if (event.key === 'Escape') {
     closeTariffModal();
   }
@@ -771,7 +771,7 @@ function openTariffModal(tariffType) {
   const modalTitle = document.getElementById('modalTitle');
   const modalBody = document.getElementById('modalBody');
   const modalChooseBtn = document.getElementById('modalChooseBtn');
-  
+
   if (tariffType === 'basic') {
     modalTitle.textContent = 'БАЗОВЫЙ ТАРИФ';
     modalChooseBtn.setAttribute('data-tariff', 'Базовый');
@@ -892,16 +892,16 @@ function openTariffModal(tariffType) {
       <p>21–26 часов (14 занятий)</p>
     `;
   }
-  
+
   modal.style.display = 'block';
   document.body.style.overflow = 'hidden';
-  
+
   // Add event listener for choose button
-  modalChooseBtn.onclick = function() {
+  modalChooseBtn.onclick = function () {
     const tariff = this.getAttribute('data-tariff');
     closeTariffModal();
     // Scroll to contact form and select tariff
-    document.getElementById('contact').scrollIntoView({behavior: 'smooth'});
+    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
     setTimeout(() => {
       const tariffSelect = document.getElementById('tariff');
       if (tariffSelect) {
@@ -918,7 +918,7 @@ function closeTariffModal() {
 }
 
 // Close modal when clicking outside
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
   const modal = document.getElementById('tariffModal');
   if (event.target === modal) {
     closeTariffModal();
@@ -926,7 +926,7 @@ document.addEventListener('click', function(event) {
 });
 
 // Close modal with Escape key
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function (event) {
   if (event.key === 'Escape') {
     closeTariffModal();
   }
