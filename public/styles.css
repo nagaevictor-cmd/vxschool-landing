@@ -39,12 +39,18 @@ html {
 }
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color: var(--text);
-  background: #0f1218;
+  font-family: var(--font-sans);
+  color: var(--foreground);
+  background: var(--background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+main {
+  padding: 0 20px;
+  max-width: 1240px;
+  margin: 0 auto;
 }
 
 /* Background Video */
@@ -706,7 +712,8 @@ section {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 32px;
-  margin-bottom: 48px;
+  margin: 0 auto 48px auto;
+  max-width: 1200px;
   opacity: 0;
   transform: translateY(12px);
   transition: opacity 600ms ease, transform 600ms ease;
@@ -2135,7 +2142,8 @@ section {
   background: linear-gradient(135deg, rgba(18, 20, 26, 0.95) 0%, rgba(15, 18, 24, 0.98) 100%);
   border-radius: 20px;
   padding: 24px;
-  margin-bottom: 32px;
+  margin: 0 auto 32px auto;
+  max-width: 1200px;
   text-align: center;
   color: #fff;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -2487,6 +2495,18 @@ body {
 /* Prevent layout shifts */
 .discount-banner {
   min-height: 120px;
+}
+
+/* Mobile main container */
+@media (max-width: 768px) {
+  main {
+    padding: 0 16px;
+  }
+  
+  section {
+    padding: 24px 20px;
+    margin-bottom: 32px;
+  }
 }
 
 @media (max-width: 768px) {
