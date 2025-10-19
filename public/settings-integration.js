@@ -157,10 +157,10 @@ class SettingsIntegration {
                 padding: 24px;
                 text-align: center;
                 font-weight: 600;
-                margin: 32px auto;
+                margin: 32px 20px;
                 border-radius: 20px;
                 box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-                max-width: 1200px;
+                max-width: calc(1200px - 40px);
                 position: relative;
                 overflow: hidden;
                 border: 1px solid rgba(255, 255, 255, 0.15);
