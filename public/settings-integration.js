@@ -157,10 +157,10 @@ class SettingsIntegration {
                 padding: 24px;
                 text-align: center;
                 font-weight: 600;
-                margin: 32px 20px;
+                margin: 32px auto;
                 border-radius: 20px;
                 box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-                max-width: calc(1200px - 40px);
+                max-width: 1200px;
                 position: relative;
                 overflow: hidden;
                 border: 1px solid rgba(255, 255, 255, 0.15);
@@ -360,12 +360,18 @@ class SettingsIntegration {
 
         document.head.insertAdjacentHTML('beforeend', styles);
 
-        // Insert banner after hero section
-        const heroSection = document.querySelector('.hero');
-        if (heroSection) {
-            heroSection.insertAdjacentElement('afterend', banner);
+        // Insert banner at the beginning of main section
+        const mainSection = document.querySelector('main');
+        if (mainSection) {
+            mainSection.insertBefore(banner, mainSection.firstChild);
         } else {
-            document.body.insertBefore(banner, document.body.firstChild);
+            // Fallback: insert after hero section
+            const heroSection = document.querySelector('.hero');
+            if (heroSection) {
+                heroSection.insertAdjacentElement('afterend', banner);
+            } else {
+                document.body.insertBefore(banner, document.body.firstChild);
+            }
         }
     }
 
