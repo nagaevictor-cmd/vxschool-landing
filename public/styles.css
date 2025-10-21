@@ -1444,22 +1444,17 @@ section {
 .carousel-wrapper {
   overflow: hidden;
   border-radius: 12px;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-y;
 }
 
 .carousel-track {
   display: flex;
   transition: transform 0.5s ease;
   width: calc(100% * var(--total-slides));
-  cursor: grab;
-}
-
-.carousel-track:active {
-  cursor: grabbing;
-}
-
-.carousel-track.dragging {
-  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .review {

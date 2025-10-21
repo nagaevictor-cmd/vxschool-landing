@@ -350,25 +350,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Touch event handlers
+      // Simplified touch event handlers
       function handleTouchStart(e) {
+        if (e.touches && e.touches.length > 1) return; // Ignore multi-touch
+        
         const touch = e.touches ? e.touches[0] : e;
         startX = touch.clientX;
         startY = touch.clientY;
-        currentX = startX;
-        currentY = startY;
-        isDragging = true;
+        isDragging = false; // Don't set to true immediately
         startTime = Date.now();
         stopAutoPlay();
-        
-        // Disable transition during drag
-        carouselTrack.style.transition = 'none';
       }
 
       function handleTouchMove(e) {
-        if (!isDragging) return;
+        if (!startX) return;
         
-        e.preventDefault();
         const touch = e.touches ? e.touches[0] : e;
         currentX = touch.clientX;
         currentY = touch.clientY;
@@ -376,45 +372,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const deltaX = currentX - startX;
         const deltaY = currentY - startY;
         
-        // Only handle horizontal swipes
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Only start dragging if horizontal movement is greater than vertical
+        if (!isDragging && Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+          isDragging = true;
+          e.preventDefault();
+        }
+        
+        // If we're dragging horizontally, prevent default and show visual feedback
+        if (isDragging) {
+          e.preventDefault();
           const translateX = -currentIndex * 100 + (deltaX / carouselTrack.offsetWidth) * 100;
+          carouselTrack.style.transition = 'none';
           carouselTrack.style.transform = `translateX(${translateX}%)`;
         }
       }
 
       function handleTouchEnd(e) {
-        if (!isDragging) return;
+        if (!startX) return;
         
-        isDragging = false;
         const deltaX = currentX - startX;
         const deltaY = currentY - startY;
         const deltaTime = Date.now() - startTime;
-        const velocity = Math.abs(deltaX) / deltaTime;
         
         // Re-enable transition
         carouselTrack.style.transition = 'transform 0.5s ease';
         
-        // Determine if it's a swipe (horizontal movement > vertical movement)
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Swipe threshold: 50px or fast swipe (velocity > 0.3)
-          const threshold = 50;
-          const isFastSwipe = velocity > 0.3;
+        if (isDragging) {
+          // Determine swipe direction based on distance and time
+          const threshold = 80; // Increased threshold for more reliable detection
+          const timeThreshold = 300; // Quick swipe time threshold
+          const isQuickSwipe = deltaTime < timeThreshold;
+          const quickSwipeThreshold = 30;
           
-          if (deltaX > threshold || (isFastSwipe && deltaX > 20)) {
-            // Swipe right - go to previous slide
-            prevSlide();
-          } else if (deltaX < -threshold || (isFastSwipe && deltaX < -20)) {
-            // Swipe left - go to next slide
-            nextSlide();
+          if ((Math.abs(deltaX) > threshold) || (isQuickSwipe && Math.abs(deltaX) > quickSwipeThreshold)) {
+            if (deltaX > 0) {
+              // Swipe right - go to previous slide
+              prevSlide();
+            } else {
+              // Swipe left - go to next slide
+              nextSlide();
+            }
           } else {
             // Snap back to current slide
             updateCarousel();
           }
-        } else {
-          // Snap back to current slide
-          updateCarousel();
         }
+        
+        // Reset variables
+        startX = 0;
+        startY = 0;
+        currentX = 0;
+        currentY = 0;
+        isDragging = false;
         
         // Restart autoplay after a delay
         setTimeout(() => {
@@ -422,16 +431,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
       }
 
-      // Add touch event listeners
-      carouselTrack.addEventListener('touchstart', handleTouchStart, { passive: false });
+      // Add touch event listeners (only for touch devices)
+      carouselTrack.addEventListener('touchstart', handleTouchStart, { passive: true });
       carouselTrack.addEventListener('touchmove', handleTouchMove, { passive: false });
-      carouselTrack.addEventListener('touchend', handleTouchEnd, { passive: false });
-      
-      // Add mouse event listeners for desktop drag support
-      carouselTrack.addEventListener('mousedown', handleTouchStart);
-      carouselTrack.addEventListener('mousemove', handleTouchMove);
-      carouselTrack.addEventListener('mouseup', handleTouchEnd);
-      carouselTrack.addEventListener('mouseleave', handleTouchEnd);
+      carouselTrack.addEventListener('touchend', handleTouchEnd, { passive: true });
 
       // Event listeners for buttons
       nextBtn.addEventListener('click', () => {
