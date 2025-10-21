@@ -284,13 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentIndex = 0;
       let autoPlayInterval;
       
-      // Touch/swipe variables
-      let startX = 0;
-      let startY = 0;
-      let currentX = 0;
-      let currentY = 0;
-      let isDragging = false;
-      let startTime = 0;
+      // Simple swipe variables
+      let touchStartX = 0;
+      let touchStartY = 0;
 
       // Create dots
       reviews.forEach((_, index) => {
@@ -350,90 +346,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Simplified touch event handlers
+      // Simple swipe handlers
       function handleTouchStart(e) {
-        if (e.touches && e.touches.length > 1) return; // Ignore multi-touch
-        
-        const touch = e.touches ? e.touches[0] : e;
-        startX = touch.clientX;
-        startY = touch.clientY;
-        isDragging = false; // Don't set to true immediately
-        startTime = Date.now();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
         stopAutoPlay();
       }
 
-      function handleTouchMove(e) {
-        if (!startX) return;
-        
-        const touch = e.touches ? e.touches[0] : e;
-        currentX = touch.clientX;
-        currentY = touch.clientY;
-        
-        const deltaX = currentX - startX;
-        const deltaY = currentY - startY;
-        
-        // Only start dragging if horizontal movement is greater than vertical
-        if (!isDragging && Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-          isDragging = true;
-          e.preventDefault();
-        }
-        
-        // If we're dragging horizontally, prevent default and show visual feedback
-        if (isDragging) {
-          e.preventDefault();
-          const translateX = -currentIndex * 100 + (deltaX / carouselTrack.offsetWidth) * 100;
-          carouselTrack.style.transition = 'none';
-          carouselTrack.style.transform = `translateX(${translateX}%)`;
-        }
-      }
-
       function handleTouchEnd(e) {
-        if (!startX) return;
+        if (!touchStartX || !touchStartY) return;
         
-        const deltaX = currentX - startX;
-        const deltaY = currentY - startY;
-        const deltaTime = Date.now() - startTime;
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
         
-        // Re-enable transition
-        carouselTrack.style.transition = 'transform 0.5s ease';
+        const deltaX = touchStartX - touchEndX;
+        const deltaY = touchStartY - touchEndY;
         
-        if (isDragging) {
-          // Determine swipe direction based on distance and time
-          const threshold = 80; // Increased threshold for more reliable detection
-          const timeThreshold = 300; // Quick swipe time threshold
-          const isQuickSwipe = deltaTime < timeThreshold;
-          const quickSwipeThreshold = 30;
+        // Only handle horizontal swipes (horizontal movement > vertical movement)
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          const minSwipeDistance = 50;
           
-          if ((Math.abs(deltaX) > threshold) || (isQuickSwipe && Math.abs(deltaX) > quickSwipeThreshold)) {
+          if (Math.abs(deltaX) > minSwipeDistance) {
             if (deltaX > 0) {
-              // Swipe right - go to previous slide
-              prevSlide();
-            } else {
-              // Swipe left - go to next slide
+              // Swiped left - next slide
               nextSlide();
+            } else {
+              // Swiped right - previous slide
+              prevSlide();
             }
-          } else {
-            // Snap back to current slide
-            updateCarousel();
           }
         }
         
-        // Reset variables
-        startX = 0;
-        startY = 0;
-        currentX = 0;
-        currentY = 0;
-        isDragging = false;
+        // Reset
+        touchStartX = 0;
+        touchStartY = 0;
         
-        // Restart autoplay after a delay
+        // Restart autoplay
         setTimeout(() => {
           startAutoPlay();
         }, 1000);
       }
 
-      // Add touch event listeners (only for touch devices)
+      // Add simple touch event listeners
       carouselTrack.addEventListener('touchstart', handleTouchStart, { passive: true });
-      carouselTrack.addEventListener('touchmove', handleTouchMove, { passive: false });
       carouselTrack.addEventListener('touchend', handleTouchEnd, { passive: true });
 
       // Event listeners for buttons
