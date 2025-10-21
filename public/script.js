@@ -284,9 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentIndex = 0;
       let autoPlayInterval;
       
-      // Simple swipe variables
-      let touchStartX = 0;
-      let touchStartY = 0;
+
 
       // Create dots
       reviews.forEach((_, index) => {
@@ -346,50 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Simple swipe handlers
-      function handleTouchStart(e) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        stopAutoPlay();
-      }
 
-      function handleTouchEnd(e) {
-        if (!touchStartX || !touchStartY) return;
-        
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        
-        const deltaX = touchStartX - touchEndX;
-        const deltaY = touchStartY - touchEndY;
-        
-        // Only handle horizontal swipes (horizontal movement > vertical movement)
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          const minSwipeDistance = 50;
-          
-          if (Math.abs(deltaX) > minSwipeDistance) {
-            if (deltaX > 0) {
-              // Swiped left - next slide
-              nextSlide();
-            } else {
-              // Swiped right - previous slide
-              prevSlide();
-            }
-          }
-        }
-        
-        // Reset
-        touchStartX = 0;
-        touchStartY = 0;
-        
-        // Restart autoplay
-        setTimeout(() => {
-          startAutoPlay();
-        }, 1000);
-      }
-
-      // Add simple touch event listeners
-      carouselTrack.addEventListener('touchstart', handleTouchStart, { passive: true });
-      carouselTrack.addEventListener('touchend', handleTouchEnd, { passive: true });
 
       // Event listeners for buttons
       nextBtn.addEventListener('click', () => {
