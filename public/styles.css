@@ -1444,12 +1444,22 @@ section {
 .carousel-wrapper {
   overflow: hidden;
   border-radius: 12px;
+  touch-action: pan-y pinch-zoom;
 }
 
 .carousel-track {
   display: flex;
   transition: transform 0.5s ease;
   width: calc(100% * var(--total-slides));
+  cursor: grab;
+}
+
+.carousel-track:active {
+  cursor: grabbing;
+}
+
+.carousel-track.dragging {
+  cursor: grabbing;
 }
 
 .review {
@@ -1811,9 +1821,18 @@ section {
     padding: 20px 16px;
   }
   
-  .pricing-card.popular {
+  /* Изменяем порядок тарифов в мобильной версии */
+  .pricing-card[data-package="basic"] {
+    order: 1;
+  }
+  
+  .pricing-card[data-package="advanced"] {
+    order: 2;
     transform: none;
-    order: -1;
+  }
+  
+  .pricing-card[data-package="paid-consultation"] {
+    order: 3;
   }
   
   .pricing-card h3 {

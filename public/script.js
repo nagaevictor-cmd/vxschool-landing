@@ -283,6 +283,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const reviews = carouselTrack.querySelectorAll('.review');
       let currentIndex = 0;
       let autoPlayInterval;
+      
+      // Touch/swipe variables
+      let startX = 0;
+      let startY = 0;
+      let currentX = 0;
+      let currentY = 0;
+      let isDragging = false;
+      let startTime = 0;
 
       // Create dots
       reviews.forEach((_, index) => {
@@ -342,7 +350,90 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Event listeners
+      // Touch event handlers
+      function handleTouchStart(e) {
+        const touch = e.touches ? e.touches[0] : e;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        currentX = startX;
+        currentY = startY;
+        isDragging = true;
+        startTime = Date.now();
+        stopAutoPlay();
+        
+        // Disable transition during drag
+        carouselTrack.style.transition = 'none';
+      }
+
+      function handleTouchMove(e) {
+        if (!isDragging) return;
+        
+        e.preventDefault();
+        const touch = e.touches ? e.touches[0] : e;
+        currentX = touch.clientX;
+        currentY = touch.clientY;
+        
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+        
+        // Only handle horizontal swipes
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          const translateX = -currentIndex * 100 + (deltaX / carouselTrack.offsetWidth) * 100;
+          carouselTrack.style.transform = `translateX(${translateX}%)`;
+        }
+      }
+
+      function handleTouchEnd(e) {
+        if (!isDragging) return;
+        
+        isDragging = false;
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+        const deltaTime = Date.now() - startTime;
+        const velocity = Math.abs(deltaX) / deltaTime;
+        
+        // Re-enable transition
+        carouselTrack.style.transition = 'transform 0.5s ease';
+        
+        // Determine if it's a swipe (horizontal movement > vertical movement)
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          // Swipe threshold: 50px or fast swipe (velocity > 0.3)
+          const threshold = 50;
+          const isFastSwipe = velocity > 0.3;
+          
+          if (deltaX > threshold || (isFastSwipe && deltaX > 20)) {
+            // Swipe right - go to previous slide
+            prevSlide();
+          } else if (deltaX < -threshold || (isFastSwipe && deltaX < -20)) {
+            // Swipe left - go to next slide
+            nextSlide();
+          } else {
+            // Snap back to current slide
+            updateCarousel();
+          }
+        } else {
+          // Snap back to current slide
+          updateCarousel();
+        }
+        
+        // Restart autoplay after a delay
+        setTimeout(() => {
+          startAutoPlay();
+        }, 1000);
+      }
+
+      // Add touch event listeners
+      carouselTrack.addEventListener('touchstart', handleTouchStart, { passive: false });
+      carouselTrack.addEventListener('touchmove', handleTouchMove, { passive: false });
+      carouselTrack.addEventListener('touchend', handleTouchEnd, { passive: false });
+      
+      // Add mouse event listeners for desktop drag support
+      carouselTrack.addEventListener('mousedown', handleTouchStart);
+      carouselTrack.addEventListener('mousemove', handleTouchMove);
+      carouselTrack.addEventListener('mouseup', handleTouchEnd);
+      carouselTrack.addEventListener('mouseleave', handleTouchEnd);
+
+      // Event listeners for buttons
       nextBtn.addEventListener('click', () => {
         nextSlide();
         stopAutoPlay();
@@ -355,9 +446,13 @@ document.addEventListener('DOMContentLoaded', () => {
         startAutoPlay();
       });
 
-      // Pause on hover
+      // Pause on hover (desktop only)
       carouselTrack.addEventListener('mouseenter', stopAutoPlay);
-      carouselTrack.addEventListener('mouseleave', startAutoPlay);
+      carouselTrack.addEventListener('mouseleave', () => {
+        if (!isDragging) {
+          startAutoPlay();
+        }
+      });
 
       // Initialize
       updateCarousel();
